@@ -157,7 +157,12 @@ struct SettingsView: View {
                 ForEach(model.configuredAccounts) { account in
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(account.login).font(.headline)
+                            Text(account.displayName).font(.headline)
+                            if account.alias != nil {
+                                Text("GitHub: \(account.login)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                             Text(account.sshKeyPath ?? "")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -244,7 +249,7 @@ struct AddAccountView: View {
                 }
                 ForEach(model.accounts) { account in
                     HStack {
-                        Text(account.login).font(.headline)
+                        Text(account.displayName).font(.headline)
                         if account.isConfigured {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
