@@ -19,7 +19,7 @@ public enum CLI {
 
     static func run(arguments: [String], ghClient: GHClient, sshManager: SSHManager) -> Result {
         if arguments == ["version"] {
-            return Result(exitCode: 0, output: "gh-switcher 0.1.2")
+            return Result(exitCode: 0, output: "gh-switcher 0.1.3")
         }
         if arguments == ["accounts"] {
             return accounts(using: ghClient)

@@ -53,28 +53,32 @@ struct GitHubAccountSwitcherMenuBarApp: App {
 }
 
 enum MenuBarIconRenderer {
+    static let shaftMinX: CGFloat = 9
+    static let shaftMaxX: CGFloat = 23
+    static let avatarRect = NSRect(x: 9, y: 3, width: 14, height: 14)
+
     static func image(for abbreviation: String, avatar: NSImage?) -> NSImage {
-        let size = NSSize(width: 34, height: 20)
+        let size = NSSize(width: 32, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let arrow = NSBezierPath()
             arrow.move(to: NSPoint(x: 0, y: rect.midY))
-            arrow.line(to: NSPoint(x: 7, y: 20))
-            arrow.line(to: NSPoint(x: 7, y: 18))
-            arrow.line(to: NSPoint(x: 27, y: 18))
-            arrow.line(to: NSPoint(x: 27, y: 20))
-            arrow.line(to: NSPoint(x: 34, y: rect.midY))
-            arrow.line(to: NSPoint(x: 27, y: 0))
-            arrow.line(to: NSPoint(x: 27, y: 2))
-            arrow.line(to: NSPoint(x: 7, y: 2))
-            arrow.line(to: NSPoint(x: 7, y: 0))
+            arrow.line(to: NSPoint(x: shaftMinX, y: 20))
+            arrow.line(to: NSPoint(x: shaftMinX, y: 18))
+            arrow.line(to: NSPoint(x: shaftMaxX, y: 18))
+            arrow.line(to: NSPoint(x: shaftMaxX, y: 20))
+            arrow.line(to: NSPoint(x: 32, y: rect.midY))
+            arrow.line(to: NSPoint(x: shaftMaxX, y: 0))
+            arrow.line(to: NSPoint(x: shaftMaxX, y: 2))
+            arrow.line(to: NSPoint(x: shaftMinX, y: 2))
+            arrow.line(to: NSPoint(x: shaftMinX, y: 0))
             arrow.close()
             NSColor.labelColor.setFill()
             arrow.fill()
 
             if let avatar {
                 NSGraphicsContext.saveGraphicsState()
-                NSBezierPath(ovalIn: NSRect(x: 10, y: 3, width: 14, height: 14)).addClip()
-                avatar.draw(in: NSRect(x: 10, y: 3, width: 14, height: 14))
+                NSBezierPath(ovalIn: avatarRect).addClip()
+                avatar.draw(in: avatarRect)
                 NSGraphicsContext.restoreGraphicsState()
             } else {
                 let attributes: [NSAttributedString.Key: Any] = [
