@@ -24,6 +24,14 @@ public enum CLI {
             return listAccounts(configurationURL: configurationURL)
         }
 
+        if arguments == ["current"] {
+            return currentAccount(configurationURL: configurationURL)
+        }
+
+        if arguments.count == 2, arguments[0] == "use" {
+            return useAccount(named: arguments[1], configurationURL: configurationURL)
+        }
+
         if arguments.count >= 3, arguments[0...1] == ["account", "link"] {
             return linkAccount(arguments: Array(arguments.dropFirst(2)), configurationURL: configurationURL)
         }
@@ -43,7 +51,7 @@ public enum CLI {
 
     private static func listAccounts(configurationURL: URL) -> Result {
         do {
-            let accounts = try AccountStore(configurationURL: configurationURL).load()
+            let accounts = try AccountStore(configurationURL: configurationURL).load().accounts
             guard !accounts.isEmpty else {
                 return Result(exitCode: 0, output: "No GitHub accounts linked.")
             }
@@ -73,21 +81,21 @@ public enum CLI {
 
         do {
             let store = AccountStore(configurationURL: configurationURL)
-            var accounts = try store.load()
+            var configuration = try store.load()
             let account = Account(keyPath: keyPath, alias: alias)
 
-            guard !accounts.contains(where: { $0.keyPath == keyPath }) else {
+            guard !configuration.accounts.contains(where: { $0.keyPath == keyPath }) else {
                 return Result(exitCode: 1, output: "SSH key is already linked.")
             }
-            if let alias, accounts.contains(where: { $0.displayName == alias }) {
+            if let alias, configuration.accounts.contains(where: { $0.displayName == alias }) {
                 return Result(exitCode: 1, output: "Alias is already in use.")
             }
-            guard !accounts.contains(where: { $0.displayName == account.displayName }) else {
+            guard !configuration.accounts.contains(where: { $0.displayName == account.displayName }) else {
                 return Result(exitCode: 1, output: "Account name is already in use.")
             }
 
-            accounts.append(account)
-            try store.save(accounts)
+            configuration.accounts.append(account)
+            try store.save(configuration)
             return Result(exitCode: 0, output: "Linked account '\(account.displayName)'.")
         } catch {
             return failure(error)
@@ -97,14 +105,49 @@ public enum CLI {
     private static func unlinkAccount(named name: String, configurationURL: URL) -> Result {
         do {
             let store = AccountStore(configurationURL: configurationURL)
-            var accounts = try store.load()
-            guard let index = accounts.firstIndex(where: { $0.displayName == name }) else {
+            var configuration = try store.load()
+            guard let index = configuration.accounts.firstIndex(where: { $0.displayName == name }) else {
                 return Result(exitCode: 1, output: "Account '\(name)' is not linked.")
             }
 
-            accounts.remove(at: index)
-            try store.save(accounts)
+            let removed = configuration.accounts.remove(at: index)
+            if configuration.activeKeyPath == removed.keyPath {
+                configuration.activeKeyPath = nil
+            }
+            try store.save(configuration)
             return Result(exitCode: 0, output: "Unlinked account '\(name)'.")
+        } catch {
+            return failure(error)
+        }
+    }
+
+    private static func currentAccount(configurationURL: URL) -> Result {
+        do {
+            let configuration = try AccountStore(configurationURL: configurationURL).load()
+            guard
+                let activeKeyPath = configuration.activeKeyPath,
+                let account = configuration.accounts.first(where: { $0.keyPath == activeKeyPath })
+            else {
+                return Result(exitCode: 0, output: "No active account selected.")
+            }
+
+            return Result(exitCode: 0, output: account.displayName)
+        } catch {
+            return failure(error)
+        }
+    }
+
+    private static func useAccount(named name: String, configurationURL: URL) -> Result {
+        do {
+            let store = AccountStore(configurationURL: configurationURL)
+            var configuration = try store.load()
+            guard let account = configuration.accounts.first(where: { $0.displayName == name }) else {
+                return Result(exitCode: 1, output: "Account '\(name)' is not linked.")
+            }
+
+            configuration.activeKeyPath = account.keyPath
+            try store.save(configuration)
+            return Result(exitCode: 0, output: "Active account: \(account.displayName)")
         } catch {
             return failure(error)
         }
@@ -124,6 +167,8 @@ public enum CLI {
 
             Commands:
               accounts                              List linked accounts
+              current                               Show the active account
+              use <name>                            Select the active account
               account link <key-path> [--alias <alias>]
                                                     Link an SSH key
               account unlink <name>                 Unlink an account

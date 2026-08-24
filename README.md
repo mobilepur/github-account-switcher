@@ -16,6 +16,8 @@ swift test
 ```sh
 gh-switcher accounts
 gh-switcher account link ~/.ssh/id_ed25519 [--alias personal]
+gh-switcher use personal
+gh-switcher current
 gh-switcher account unlink personal
 ```
 

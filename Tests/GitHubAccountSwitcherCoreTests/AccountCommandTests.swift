@@ -4,6 +4,15 @@ import Testing
 
 @Suite("Account commands")
 struct AccountCommandTests {
+    @Test("Current reports when no account is active")
+    func currentReportsNoActiveAccount() throws {
+        try withFixture { fixture in
+            let result = CLI.run(arguments: ["current"], configurationURL: fixture.configurationURL)
+
+            #expect(result == .init(exitCode: 0, output: "No active account selected."))
+        }
+    }
+
     @Test("Accounts reports an empty configuration")
     func accountsReportsEmptyConfiguration() throws {
         try withFixture { fixture in
@@ -11,6 +20,20 @@ struct AccountCommandTests {
 
             #expect(result.exitCode == 0)
             #expect(result.output == "No GitHub accounts linked.")
+        }
+    }
+
+    @Test("Accounts reads the configuration format from the previous version")
+    func accountsReadsPreviousConfiguration() throws {
+        try withFixture { fixture in
+            let data = Data(#"[{"keyPath":"/tmp/id_ed25519","alias":"personal"}]"#.utf8)
+            try data.write(to: fixture.configurationURL)
+
+            let result = CLI.run(arguments: ["accounts"], configurationURL: fixture.configurationURL)
+
+            #expect(result.exitCode == 0)
+            #expect(result.output.contains("personal"))
+            #expect(result.output.contains("/tmp/id_ed25519"))
         }
     }
 
@@ -100,6 +123,49 @@ struct AccountCommandTests {
 
             #expect(unlink == .init(exitCode: 0, output: "Unlinked account 'work'."))
             #expect(accounts.output == "No GitHub accounts linked.")
+        }
+    }
+
+    @Test("Use selects a linked account")
+    func useSelectsLinkedAccount() throws {
+        try withFixture { fixture in
+            let keyURL = try fixture.createKey(named: "id_ed25519_work")
+            _ = CLI.run(
+                arguments: ["account", "link", keyURL.path, "--alias", "work"],
+                configurationURL: fixture.configurationURL
+            )
+
+            let use = CLI.run(arguments: ["use", "work"], configurationURL: fixture.configurationURL)
+            let current = CLI.run(arguments: ["current"], configurationURL: fixture.configurationURL)
+
+            #expect(use == .init(exitCode: 0, output: "Active account: work"))
+            #expect(current == .init(exitCode: 0, output: "work"))
+        }
+    }
+
+    @Test("Use rejects an account that is not linked")
+    func useRejectsUnknownAccount() throws {
+        try withFixture { fixture in
+            let result = CLI.run(arguments: ["use", "missing"], configurationURL: fixture.configurationURL)
+
+            #expect(result == .init(exitCode: 1, output: "Account 'missing' is not linked."))
+        }
+    }
+
+    @Test("Unlink clears the active account")
+    func unlinkClearsActiveAccount() throws {
+        try withFixture { fixture in
+            let keyURL = try fixture.createKey(named: "id_ed25519_work")
+            _ = CLI.run(
+                arguments: ["account", "link", keyURL.path, "--alias", "work"],
+                configurationURL: fixture.configurationURL
+            )
+            _ = CLI.run(arguments: ["use", "work"], configurationURL: fixture.configurationURL)
+
+            _ = CLI.run(arguments: ["account", "unlink", "work"], configurationURL: fixture.configurationURL)
+            let current = CLI.run(arguments: ["current"], configurationURL: fixture.configurationURL)
+
+            #expect(current == .init(exitCode: 0, output: "No active account selected."))
         }
     }
 
