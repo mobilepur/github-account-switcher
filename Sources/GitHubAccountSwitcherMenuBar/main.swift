@@ -142,7 +142,8 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("GitHub Accounts").font(.title2)
             if model.configuredAccounts.isEmpty {
-                ContentUnavailableView("No linked GitHub accounts", systemImage: "person.crop.circle.badge.exclamationmark")
+                Text("No accounts linked yet.")
+                    .foregroundStyle(.secondary)
             } else {
                 ForEach(model.configuredAccounts) { account in
                     HStack {
@@ -169,7 +170,7 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 620)
+        .frame(minWidth: 460)
         .sheet(isPresented: $isAddingAccount) {
             AddAccountView(model: model)
         }
