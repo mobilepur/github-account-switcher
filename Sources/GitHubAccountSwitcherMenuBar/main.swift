@@ -46,15 +46,12 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             let text = abbreviation as NSString
             let textSize = text.size(withAttributes: attributes)
             text.draw(
-                at: NSPoint(x: (rect.width - textSize.width) / 2, y: 10),
+                at: NSPoint(
+                    x: (rect.width - textSize.width) / 2,
+                    y: (rect.height - textSize.height) / 2
+                ),
                 withAttributes: attributes
             )
-
-            let symbol = NSImage(
-                systemSymbolName: "arrow.left.arrow.right",
-                accessibilityDescription: nil
-            )?.withSymbolConfiguration(.init(pointSize: 7, weight: .semibold))
-            symbol?.draw(in: NSRect(x: 6.5, y: 4, width: 12, height: 8))
             return true
         }
         image.isTemplate = true
