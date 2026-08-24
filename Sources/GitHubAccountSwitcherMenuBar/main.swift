@@ -54,7 +54,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 systemSymbolName: "arrow.left.arrow.right",
                 accessibilityDescription: nil
             )?.withSymbolConfiguration(.init(pointSize: 7, weight: .semibold))
-            symbol?.draw(in: NSRect(x: 8.5, y: 1, width: 8, height: 8))
+            symbol?.draw(in: NSRect(x: 6.5, y: 4, width: 12, height: 8))
             return true
         }
         image.isTemplate = true
