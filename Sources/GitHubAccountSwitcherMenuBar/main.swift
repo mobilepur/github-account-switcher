@@ -26,12 +26,14 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             Button("Refresh") { model.reload() }
             Button("Quit") { NSApplication.shared.terminate(nil) }
         } label: {
-            VStack(spacing: -3) {
+            VStack(spacing: -1) {
                 Text(model.activeAccount?.menuBarAbbreviation ?? "---")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
                     .lineLimit(1)
+                    .frame(height: 10)
                 Image(systemName: "arrow.left.arrow.right")
                     .font(.system(size: 7, weight: .semibold))
+                    .frame(height: 8)
             }
             .frame(width: 25, height: 20)
             .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
