@@ -10,6 +10,8 @@ struct GitHubAccountSwitcherMenuBarApp: App {
 
     var body: some Scene {
         MenuBarExtra {
+            Text("GitHub Account Switcher")
+            Divider()
             if let error = model.error {
                 Text(error)
             }
