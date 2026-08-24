@@ -51,10 +51,11 @@ public struct LoginItemManager {
 
     public func setEnabled(_ enabled: Bool) throws {
         if enabled {
-            try registerAction()
             if status == .requiresApproval {
                 openSettingsAction()
+                return
             }
+            try registerAction()
         } else {
             try unregisterAction()
         }

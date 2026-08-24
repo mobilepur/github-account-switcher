@@ -16,11 +16,12 @@ struct LoginItemManagerTests {
 
     @Test("Approval opens the system Login Items settings")
     func approvalOpensSystemSettings() throws {
-        let recorder = LoginItemRecorder(status: .requiresApproval, statusAfterRegistration: .requiresApproval)
+        let recorder = LoginItemRecorder(status: .requiresApproval, registrationError: TestError.registrationDenied)
         let manager = recorder.manager
 
         try manager.setEnabled(true)
 
+        #expect(!recorder.didRegister)
         #expect(recorder.didOpenSettings)
     }
 
@@ -40,10 +41,16 @@ private final class LoginItemRecorder {
     var didUnregister = false
     var didOpenSettings = false
     let statusAfterRegistration: LoginItemStatus
+    let registrationError: Error?
 
-    init(status: LoginItemStatus = .disabled, statusAfterRegistration: LoginItemStatus = .enabled) {
+    init(
+        status: LoginItemStatus = .disabled,
+        statusAfterRegistration: LoginItemStatus = .enabled,
+        registrationError: Error? = nil
+    ) {
         currentStatus = status
         self.statusAfterRegistration = statusAfterRegistration
+        self.registrationError = registrationError
     }
 
     var manager: LoginItemManager {
@@ -51,6 +58,9 @@ private final class LoginItemRecorder {
             status: { self.currentStatus },
             register: {
                 self.didRegister = true
+                if let registrationError = self.registrationError {
+                    throw registrationError
+                }
                 self.currentStatus = self.statusAfterRegistration
             },
             unregister: {
@@ -60,4 +70,8 @@ private final class LoginItemRecorder {
             openSettings: { self.didOpenSettings = true }
         )
     }
+}
+
+private enum TestError: Error {
+    case registrationDenied
 }
