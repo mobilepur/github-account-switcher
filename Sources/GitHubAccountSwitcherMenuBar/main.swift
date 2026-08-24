@@ -158,6 +158,10 @@ struct MainPanelView: View {
             Toggle("Start at Login", isOn: startAtLoginBinding)
                 .disabled(loginItemManager.status == .unavailable)
             Toggle("Use GitHub Avatars", isOn: $useGitHubAvatars)
+            Link(destination: AppLinks.newIssue) {
+                Label("Report a Problem…", systemImage: "exclamationmark.bubble")
+            }
+            .buttonStyle(.plain)
             if let loginItemError {
                 Text(loginItemError)
                     .font(.caption)
@@ -171,7 +175,7 @@ struct MainPanelView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .frame(width: 240, height: 300)
+        .frame(width: 240, height: 324)
         .onAppear {
             startsAtLogin = loginItemManager.isEnabled
         }
