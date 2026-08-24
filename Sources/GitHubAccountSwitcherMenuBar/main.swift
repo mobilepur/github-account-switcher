@@ -203,10 +203,15 @@ final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
 
 struct SettingsView: View {
     let model: MenuBarModel
+    private let loginItemManager = LoginItemManager.live
     @State private var accountToRemove: GitHubAccount?
+    @State private var startsAtLogin = false
+    @State private var loginItemError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            Toggle("Start at Login", isOn: startAtLoginBinding)
+            Divider()
             Text("GitHub Accounts")
                 .font(.title2)
             if model.accounts.isEmpty {
@@ -215,6 +220,7 @@ struct SettingsView: View {
             } else {
                 ForEach(model.accounts) { account in
                     HStack {
+                        GitHubAvatarView(account: account)
                         VStack(alignment: .leading) {
                             Text(account.login)
                                 .font(.headline)
@@ -249,9 +255,17 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
+            if let loginItemError {
+                Text(loginItemError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
         }
         .padding(20)
         .frame(width: 520, height: 368)
+        .onAppear {
+            startsAtLogin = loginItemManager.isEnabled
+        }
         .alert(
             "Remove \(accountToRemove?.login ?? "account")?",
             isPresented: Binding(
@@ -270,5 +284,43 @@ struct SettingsView: View {
         } message: { account in
             Text("This removes the local private-key link for \(account.login). The account remains signed in to gh.")
         }
+    }
+
+    private var startAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { startsAtLogin },
+            set: { enabled in
+                do {
+                    try loginItemManager.setEnabled(enabled)
+                    startsAtLogin = enabled
+                    loginItemError = nil
+                } catch {
+                    loginItemError = error.localizedDescription
+                }
+            }
+        )
+    }
+}
+
+struct GitHubAvatarView: View {
+    let account: GitHubAccount
+
+    var body: some View {
+        AsyncImage(url: account.avatarURL) { phase in
+            if case let .success(image) = phase {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    Circle().fill(.quaternary)
+                    Text(account.menuBarAbbreviation)
+                        .font(.caption.bold())
+                }
+            }
+        }
+        .frame(width: 36, height: 36)
+        .clipShape(Circle())
+        .accessibilityLabel("GitHub avatar for \(account.login)")
     }
 }
