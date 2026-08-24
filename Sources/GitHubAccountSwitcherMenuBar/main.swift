@@ -100,7 +100,9 @@ final class MenuBarModel {
 
     func link(_ account: GitHubAccount, alias: String) {
         let panel = NSOpenPanel()
-        panel.title = "Select SSH key for \(account.login)"
+        panel.title = "Choose the private key for \(account.login)"
+        panel.message = "Choose the key file without .pub — for example, id_ed25519_mobilepur. Do not choose config, known_hosts, or a .pub file."
+        panel.prompt = "Link Private Key"
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = false
@@ -189,17 +191,27 @@ struct AddAccountView: View {
                     description: Text("Add another account with gh auth login, then refresh.")
                 )
             } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Choose the private key belonging to the GitHub account.")
+                        .font(.headline)
+                    Text("It is usually in ~/.ssh and has a name like id_ed25519. Choose the file without .pub — never config or known_hosts.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 ForEach(model.availableAccounts) { account in
                     HStack {
                         Text(account.login).font(.headline)
                         Spacer()
                         TextField("Alias (optional)", text: aliasBinding(for: account))
                             .frame(width: 140)
-                        Button("Link SSH key…") {
+                        Button("Choose private key…") {
                             model.link(account, alias: aliases[account.login] ?? "")
                         }
                     }
                 }
+            }
+            if let error = model.error {
+                Text(error).foregroundStyle(.red).font(.caption)
             }
         }
         .padding(20)
