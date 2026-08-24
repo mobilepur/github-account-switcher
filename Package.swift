@@ -6,12 +6,12 @@ let package = Package(
     name: "github-account-switcher",
     platforms: [.macOS(.v13)],
     products: [
-        .executable(name: "gas", targets: ["gas"]),
+        .executable(name: "gh-switcher", targets: ["GitHubAccountSwitcherCLI"]),
     ],
     targets: [
         .target(name: "GitHubAccountSwitcherCore"),
         .executableTarget(
-            name: "gas",
+            name: "GitHubAccountSwitcherCLI",
             dependencies: ["GitHubAccountSwitcherCore"]
         ),
         .testTarget(

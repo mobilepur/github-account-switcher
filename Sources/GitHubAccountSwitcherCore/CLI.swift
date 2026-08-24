@@ -17,7 +17,7 @@ public enum CLI {
 
     static func run(arguments: [String], configurationURL: URL) -> Result {
         if arguments == ["version"] {
-            return Result(exitCode: 0, output: "gas 0.1.0")
+            return Result(exitCode: 0, output: "gh-switcher 0.1.0")
         }
 
         if arguments == ["accounts"] {
@@ -57,7 +57,7 @@ public enum CLI {
 
     private static func linkAccount(arguments: [String], configurationURL: URL) -> Result {
         guard arguments.count == 1 || (arguments.count == 3 && arguments[1] == "--alias") else {
-            return Result(exitCode: 1, output: "Usage: gas account link <key-path> [--alias <alias>]")
+            return Result(exitCode: 1, output: "Usage: gh-switcher account link <key-path> [--alias <alias>]")
         }
 
         let keyPath = NSString(string: arguments[0]).expandingTildeInPath
@@ -120,7 +120,7 @@ public enum CLI {
             output: """
             GitHub Account Switcher
 
-            Usage: gas <command>
+            Usage: gh-switcher <command>
 
             Commands:
               accounts                              List linked accounts
