@@ -26,7 +26,15 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             Button("Refresh") { model.reload() }
             Button("Quit") { NSApplication.shared.terminate(nil) }
         } label: {
-            Image(systemName: model.needsAttention ? "person.crop.circle.badge.exclamationmark" : "person.crop.circle")
+            VStack(spacing: -3) {
+                Text(model.activeAccount?.menuBarAbbreviation ?? "---")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .lineLimit(1)
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.system(size: 7, weight: .semibold))
+            }
+            .frame(width: 25, height: 20)
+            .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
         }
         .menuBarExtraStyle(.menu)
 
@@ -48,6 +56,7 @@ final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
     var needsAttention: Bool { accounts.isEmpty || accounts.contains(where: { $0.sshKeyPath == nil }) }
+    var activeAccount: GitHubAccount? { accounts.first(where: \.isActive) }
 
     init() { reload() }
 
