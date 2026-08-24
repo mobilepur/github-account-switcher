@@ -8,6 +8,7 @@ public struct GitHubAccount: Identifiable, Sendable {
 
     public var id: String { login }
     public var displayName: String { alias ?? login }
+    public var isConfigured: Bool { sshKeyPath != nil }
     public var menuBarAbbreviation: String {
         String(displayName.prefix(3)).lowercased()
     }

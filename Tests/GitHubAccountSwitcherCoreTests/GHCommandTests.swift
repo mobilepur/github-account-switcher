@@ -3,6 +3,15 @@ import Testing
 
 @Suite("GitHub CLI wrapper commands")
 struct GHCommandTests {
+    @Test("An account is configured only when it has an SSH key")
+    func configuredAccountRequiresSSHKey() {
+        let configured = GitHubAccount(login: "mobilepur", isActive: true, sshKeyPath: "/tmp/key", alias: nil)
+        let unconfigured = GitHubAccount(login: "nayooti", isActive: false, sshKeyPath: nil, alias: nil)
+
+        #expect(configured.isConfigured)
+        #expect(!unconfigured.isConfigured)
+    }
+
     @Test("Menu bar abbreviation uses the first three alias characters")
     func menuBarAbbreviationUsesAlias() {
         let account = GitHubAccount(

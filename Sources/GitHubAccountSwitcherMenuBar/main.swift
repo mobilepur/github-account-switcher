@@ -13,13 +13,12 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             if let error = model.error {
                 Text(error)
             }
-            ForEach(model.accounts) { account in
+            ForEach(model.configuredAccounts) { account in
                 Button {
                     model.select(account.login)
                 } label: {
                     Text("\(account.isActive ? "✓ " : "")\(account.displayName)")
                 }
-                .disabled(account.sshKeyPath == nil)
             }
             Divider()
             SettingsLink { Text("Settings…") }
@@ -70,8 +69,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
-    var needsAttention: Bool { accounts.isEmpty || accounts.contains(where: { $0.sshKeyPath == nil }) }
-    var activeAccount: GitHubAccount? { accounts.first(where: \.isActive) }
+    var configuredAccounts: [GitHubAccount] { accounts.filter(\.isConfigured) }
+    var availableAccounts: [GitHubAccount] { accounts.filter { !$0.isConfigured } }
+    var needsAttention: Bool { configuredAccounts.isEmpty }
+    var activeAccount: GitHubAccount? { configuredAccounts.first(where: \.isActive) }
 
     init() { reload() }
 
@@ -118,29 +119,33 @@ final class MenuBarModel {
 struct SettingsView: View {
     let model: MenuBarModel
     @State private var aliases: [String: String] = [:]
+    @State private var isAddingAccount = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("GitHub Accounts").font(.title2)
-            if model.accounts.isEmpty {
-                ContentUnavailableView("No GitHub accounts", systemImage: "person.crop.circle.badge.exclamationmark")
+            if model.configuredAccounts.isEmpty {
+                ContentUnavailableView("No linked GitHub accounts", systemImage: "person.crop.circle.badge.exclamationmark")
             } else {
-                ForEach(model.accounts) { account in
+                ForEach(model.configuredAccounts) { account in
                     HStack {
                         VStack(alignment: .leading) {
                             Text(account.login).font(.headline)
-                            Text(account.sshKeyPath ?? "No SSH key linked")
+                            Text(account.sshKeyPath ?? "")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
                         TextField("Alias (optional)", text: aliasBinding(for: account))
                             .frame(width: 140)
-                        Button(account.sshKeyPath == nil ? "Link SSH key…" : "Change…") {
+                        Button("Change…") {
                             model.link(account, alias: aliases[account.login] ?? account.alias ?? "")
                         }
                     }
                 }
+            }
+            Button("Add GitHub Account…") {
+                isAddingAccount = true
             }
             if let error = model.error {
                 Text(error).foregroundStyle(.red).font(.caption)
@@ -148,11 +153,58 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(minWidth: 620)
+        .sheet(isPresented: $isAddingAccount) {
+            AddAccountView(model: model)
+        }
     }
 
     private func aliasBinding(for account: GitHubAccount) -> Binding<String> {
         Binding(
             get: { aliases[account.login] ?? account.alias ?? "" },
+            set: { aliases[account.login] = $0 }
+        )
+    }
+}
+
+struct AddAccountView: View {
+    let model: MenuBarModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var aliases: [String: String] = [:]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Add GitHub Account").font(.title2)
+                Spacer()
+                Button("Done") { dismiss() }
+            }
+            if model.availableAccounts.isEmpty {
+                ContentUnavailableView(
+                    "No available GitHub accounts",
+                    systemImage: "person.crop.circle.badge.checkmark",
+                    description: Text("Add another account with gh auth login, then refresh.")
+                )
+            } else {
+                ForEach(model.availableAccounts) { account in
+                    HStack {
+                        Text(account.login).font(.headline)
+                        Spacer()
+                        TextField("Alias (optional)", text: aliasBinding(for: account))
+                            .frame(width: 140)
+                        Button("Link SSH key…") {
+                            model.link(account, alias: aliases[account.login] ?? "")
+                        }
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .frame(minWidth: 520, minHeight: 180)
+    }
+
+    private func aliasBinding(for account: GitHubAccount) -> Binding<String> {
+        Binding(
+            get: { aliases[account.login] ?? "" },
             set: { aliases[account.login] = $0 }
         )
     }
