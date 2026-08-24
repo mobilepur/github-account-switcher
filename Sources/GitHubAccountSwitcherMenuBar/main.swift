@@ -6,6 +6,7 @@ import SwiftUI
 @main
 struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.openSettings) private var openSettings
     @State private var model = MenuBarModel()
 
     var body: some Scene {
@@ -21,7 +22,10 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 }
             }
             Divider()
-            SettingsLink { Text("Settings…") }
+            Button("Settings…") {
+                openSettings()
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
             Button("Refresh") { model.reload() }
             Button("Quit") { NSApplication.shared.terminate(nil) }
         } label: {
