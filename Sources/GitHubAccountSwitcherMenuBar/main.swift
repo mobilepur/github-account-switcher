@@ -40,10 +40,10 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     }
 
     private func menuBarImage(for abbreviation: String) -> NSImage {
-        let size = NSSize(width: 25, height: 20)
+        let size = NSSize(width: 28, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 9, weight: .semibold),
+                .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
                 .foregroundColor: NSColor.labelColor,
             ]
             let text = abbreviation as NSString
@@ -122,6 +122,15 @@ final class MenuBarModel {
             self.error = error.localizedDescription
         }
     }
+
+    func unlink(_ account: GitHubAccount) {
+        do {
+            try AccountService.unlinkSSH(login: account.login)
+            reload()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
 }
 
 final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
@@ -137,6 +146,7 @@ struct SettingsView: View {
     let model: MenuBarModel
     @State private var aliases: [String: String] = [:]
     @State private var isAddingAccount = false
+    @State private var accountToRemove: GitHubAccount?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -159,6 +169,9 @@ struct SettingsView: View {
                         Button("Change…") {
                             model.link(account, alias: aliases[account.login] ?? account.alias ?? "")
                         }
+                        Button("Remove", role: .destructive) {
+                            accountToRemove = account
+                        }
                     }
                 }
             }
@@ -173,6 +186,24 @@ struct SettingsView: View {
         .frame(minWidth: 460)
         .sheet(isPresented: $isAddingAccount) {
             AddAccountView(model: model)
+        }
+        .alert(
+            "Remove \(accountToRemove?.displayName ?? "account")?",
+            isPresented: Binding(
+                get: { accountToRemove != nil },
+                set: { if !$0 { accountToRemove = nil } }
+            ),
+            presenting: accountToRemove
+        ) { account in
+            Button("Remove", role: .destructive) {
+                model.unlink(account)
+                accountToRemove = nil
+            }
+            Button("Cancel", role: .cancel) {
+                accountToRemove = nil
+            }
+        } message: { account in
+            Text("This removes the local SSH key and alias link for \(account.login). The account remains signed in to gh.")
         }
     }
 

@@ -37,6 +37,10 @@ public enum AccountService {
         try SSHManager.live.link(login: login, keyPath: keyPath, alias: alias)
     }
 
+    public static func unlinkSSH(login: String) throws {
+        try SSHManager.live.unlink(login: login)
+    }
+
     public static func switchAccount(to login: String) throws {
         try switchAccount(to: login, ghClient: .live, sshManager: .live)
     }
