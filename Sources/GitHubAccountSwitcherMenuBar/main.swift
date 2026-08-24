@@ -74,7 +74,6 @@ final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
     var configuredAccounts: [GitHubAccount] { accounts.filter(\.isConfigured) }
-    var availableAccounts: [GitHubAccount] { accounts.filter { !$0.isConfigured } }
     var needsAttention: Bool { configuredAccounts.isEmpty }
     var activeAccount: GitHubAccount? { configuredAccounts.first(where: \.isActive) }
 
@@ -232,12 +231,9 @@ struct AddAccountView: View {
                 Spacer()
                 Button("Done") { dismiss() }
             }
-            if model.availableAccounts.isEmpty {
-                ContentUnavailableView(
-                    "No available GitHub accounts",
-                    systemImage: "person.crop.circle.badge.checkmark",
-                    description: Text("Add another account with gh auth login, then refresh.")
-                )
+            if model.accounts.isEmpty {
+                Text("No accounts found in gh. Add one with gh auth login, then refresh.")
+                    .foregroundStyle(.secondary)
             } else {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Choose the private key belonging to the GitHub account.")
@@ -246,14 +242,21 @@ struct AddAccountView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                ForEach(model.availableAccounts) { account in
+                ForEach(model.accounts) { account in
                     HStack {
                         Text(account.login).font(.headline)
+                        if account.isConfigured {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                                .accessibilityLabel("Linked")
+                        }
                         Spacer()
-                        TextField("Alias (optional)", text: aliasBinding(for: account))
-                            .frame(width: 140)
-                        Button("Choose private key…") {
-                            model.link(account, alias: aliases[account.login] ?? "")
+                        if !account.isConfigured {
+                            TextField("Alias (optional)", text: aliasBinding(for: account))
+                                .frame(width: 140)
+                            Button("Choose private key…") {
+                                model.link(account, alias: aliases[account.login] ?? "")
+                            }
                         }
                     }
                 }
