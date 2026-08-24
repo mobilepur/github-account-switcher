@@ -14,6 +14,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     var body: some Scene {
         MenuBarExtra {
             MainPanelView(model: model) {
+                NSApplication.shared.keyWindow?.orderOut(nil)
                 openSettings()
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 DispatchQueue.main.async {
@@ -277,6 +278,7 @@ final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
 
 struct SettingsView: View {
     let model: MenuBarModel
+    @Environment(\.dismiss) private var dismiss
     @State private var accountToRemove: GitHubAccount?
 
     var body: some View {
@@ -284,7 +286,7 @@ struct SettingsView: View {
             Text("GitHub Accounts")
                 .font(.title2)
             if model.accounts.isEmpty {
-                Text("No accounts found in gh. Add one with gh auth login, then refresh.")
+                Text("No accounts found in gh. Add one with gh auth login, then reopen Account Settings.")
                     .foregroundStyle(.secondary)
             } else {
                 ScrollView {
@@ -320,7 +322,10 @@ struct SettingsView: View {
             }
             HStack {
                 Spacer()
-                Button("Refresh") { model.reload() }
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
             }
             if let error = model.error {
                 Text(error)
@@ -330,6 +335,7 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 520, height: 368)
+        .onAppear { model.reload() }
         .alert(
             "Remove \(accountToRemove?.login ?? "account")?",
             isPresented: Binding(
