@@ -17,7 +17,7 @@ public struct GitHubAccount: Identifiable, Sendable {
 public enum AccountService {
     public static func accounts() throws -> [GitHubAccount] {
         let mappings = try SSHManager.live.mappings()
-        return try GHClient.live.accounts().map { account in
+        let accounts = try GHClient.live.accounts().map { account in
             let mapping = mappings[account.login]
             return GitHubAccount(
                 login: account.login,
@@ -25,6 +25,13 @@ public enum AccountService {
                 sshKeyPath: mapping?.keyPath,
                 alias: mapping?.alias
             )
+        }
+        return sortedLexicographically(accounts)
+    }
+
+    static func sortedLexicographically(_ accounts: [GitHubAccount]) -> [GitHubAccount] {
+        accounts.sorted {
+            $0.login.localizedCaseInsensitiveCompare($1.login) == .orderedAscending
         }
     }
 

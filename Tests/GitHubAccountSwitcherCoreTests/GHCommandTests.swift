@@ -3,6 +3,16 @@ import Testing
 
 @Suite("GitHub CLI wrapper commands")
 struct GHCommandTests {
+    @Test("Accounts are sorted lexicographically by login")
+    func accountsAreSortedLexicographically() {
+        let accounts = [
+            GitHubAccount(login: "nayooti", isActive: false, sshKeyPath: nil, alias: nil),
+            GitHubAccount(login: "MobilePur", isActive: true, sshKeyPath: nil, alias: nil),
+        ]
+
+        #expect(AccountService.sortedLexicographically(accounts).map(\.login) == ["MobilePur", "nayooti"])
+    }
+
     @Test("An account is configured only when it has an SSH key")
     func configuredAccountRequiresSSHKey() {
         let configured = GitHubAccount(login: "mobilepur", isActive: true, sshKeyPath: "/tmp/key", alias: nil)
