@@ -54,40 +54,27 @@ struct GitHubAccountSwitcherMenuBarApp: App {
 
 enum MenuBarIconRenderer {
     static func image(for abbreviation: String, avatar: NSImage?) -> NSImage {
-        let size = NSSize(width: 30, height: 20)
+        let size = NSSize(width: 34, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let arrow = NSBezierPath()
             arrow.move(to: NSPoint(x: 0, y: rect.midY))
-            arrow.line(to: NSPoint(x: 6, y: 20))
-            arrow.line(to: NSPoint(x: 6, y: 17))
-            arrow.line(to: NSPoint(x: 24, y: 17))
-            arrow.line(to: NSPoint(x: 24, y: 20))
-            arrow.line(to: NSPoint(x: 30, y: rect.midY))
-            arrow.line(to: NSPoint(x: 24, y: 0))
-            arrow.line(to: NSPoint(x: 24, y: 3))
-            arrow.line(to: NSPoint(x: 6, y: 3))
-            arrow.line(to: NSPoint(x: 6, y: 0))
+            arrow.line(to: NSPoint(x: 7, y: 20))
+            arrow.line(to: NSPoint(x: 7, y: 18))
+            arrow.line(to: NSPoint(x: 27, y: 18))
+            arrow.line(to: NSPoint(x: 27, y: 20))
+            arrow.line(to: NSPoint(x: 34, y: rect.midY))
+            arrow.line(to: NSPoint(x: 27, y: 0))
+            arrow.line(to: NSPoint(x: 27, y: 2))
+            arrow.line(to: NSPoint(x: 7, y: 2))
+            arrow.line(to: NSPoint(x: 7, y: 0))
             arrow.close()
-
-            NSGraphicsContext.saveGraphicsState()
-            NSBezierPath(rect: NSRect(x: 0, y: 0, width: rect.midX, height: rect.height)).addClip()
-            NSColor.white.setFill()
+            NSColor.labelColor.setFill()
             arrow.fill()
-            NSColor.black.setStroke()
-            arrow.lineWidth = 1.5
-            arrow.stroke()
-            NSGraphicsContext.restoreGraphicsState()
-
-            NSGraphicsContext.saveGraphicsState()
-            NSBezierPath(rect: NSRect(x: rect.midX, y: 0, width: rect.midX, height: rect.height)).addClip()
-            NSColor.black.setFill()
-            arrow.fill()
-            NSGraphicsContext.restoreGraphicsState()
 
             if let avatar {
                 NSGraphicsContext.saveGraphicsState()
-                NSBezierPath(ovalIn: NSRect(x: 8, y: 3, width: 14, height: 14)).addClip()
-                avatar.draw(in: NSRect(x: 8, y: 3, width: 14, height: 14))
+                NSBezierPath(ovalIn: NSRect(x: 10, y: 3, width: 14, height: 14)).addClip()
+                avatar.draw(in: NSRect(x: 10, y: 3, width: 14, height: 14))
                 NSGraphicsContext.restoreGraphicsState()
             } else {
                 let attributes: [NSAttributedString.Key: Any] = [
@@ -96,26 +83,19 @@ enum MenuBarIconRenderer {
                 ]
                 let text = abbreviation as NSString
                 let textSize = text.size(withAttributes: attributes)
-                let origin = NSPoint(
-                    x: (rect.width - textSize.width) / 2,
-                    y: (rect.height - textSize.height) / 2
+                NSGraphicsContext.current?.compositingOperation = .destinationOut
+                text.draw(
+                    at: NSPoint(
+                        x: (rect.width - textSize.width) / 2,
+                        y: (rect.height - textSize.height) / 2
+                    ),
+                    withAttributes: attributes
                 )
-
-                NSGraphicsContext.saveGraphicsState()
-                NSBezierPath(rect: NSRect(x: 0, y: 0, width: rect.midX, height: rect.height)).addClip()
-                text.draw(at: origin, withAttributes: attributes)
-                NSGraphicsContext.restoreGraphicsState()
-
-                NSGraphicsContext.saveGraphicsState()
-                NSBezierPath(rect: NSRect(x: rect.midX, y: 0, width: rect.midX, height: rect.height)).addClip()
-                var invertedAttributes = attributes
-                invertedAttributes[.foregroundColor] = NSColor.white
-                text.draw(at: origin, withAttributes: invertedAttributes)
-                NSGraphicsContext.restoreGraphicsState()
+                NSGraphicsContext.current?.compositingOperation = .sourceOver
             }
             return true
         }
-        image.isTemplate = false
+        image.isTemplate = avatar == nil
         return image
     }
 }

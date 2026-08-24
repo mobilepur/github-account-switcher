@@ -28,6 +28,6 @@ class GhSwitcher < Formula
   end
 
   test do
-    assert_match "gh-switcher 0.1.1", shell_output("#{bin}/gh-switcher version")
+    assert_match "gh-switcher 0.1.2", shell_output("#{bin}/gh-switcher version")
   end
 end
