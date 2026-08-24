@@ -14,11 +14,11 @@ Until the first tagged release is available:
 ```sh
 brew tap mobilepur/gh-switcher https://github.com/mobilepur/github-account-switcher
 brew install --HEAD mobilepur/gh-switcher/gh-switcher
-brew services start gh-switcher
+open "$(brew --prefix gh-switcher)/GitHub Account Switcher.app"
 ```
 
-The service starts the native menu bar application. macOS 14 or newer and the
-GitHub CLI are required.
+The app can register itself in macOS Login Items using the `Start at Login`
+toggle. macOS 14 or newer and the GitHub CLI are required.
 
 ## Setup
 

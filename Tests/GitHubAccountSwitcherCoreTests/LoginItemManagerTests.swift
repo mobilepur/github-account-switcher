@@ -1,36 +1,63 @@
-import Foundation
 import Testing
 @testable import GitHubAccountSwitcherCore
 
 @Suite("Login item")
 struct LoginItemManagerTests {
-    @Test("Enabling and disabling writes and removes the launch agent")
-    func toggleLoginItem() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        let plistURL = directory.appending(path: "com.mobilepur.gh-switcher.plist")
-        let manager = LoginItemManager(
-            plistURL: plistURL,
-            executablePath: "/opt/homebrew/bin/gh-switcher-menubar"
-        )
-        defer { try? FileManager.default.removeItem(at: directory) }
+    @Test("Enabling registers the main app")
+    func enableLoginItem() throws {
+        let recorder = LoginItemRecorder()
+        let manager = recorder.manager
 
         try manager.setEnabled(true)
 
+        #expect(recorder.didRegister)
         #expect(manager.isEnabled)
-        let data = try Data(contentsOf: plistURL)
-        let plist = try #require(
-            PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
-        )
-        #expect(plist["Label"] as? String == "com.mobilepur.github-account-switcher")
-        #expect(plist["ProgramArguments"] as? [String] == ["/opt/homebrew/bin/gh-switcher-menubar"])
-        #expect(plist["RunAtLoad"] as? Bool == true)
-        #expect(
-            (plist["EnvironmentVariables"] as? [String: String])?["PATH"]
-                == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-        )
+    }
 
-        try manager.setEnabled(false)
+    @Test("Approval opens the system Login Items settings")
+    func approvalOpensSystemSettings() throws {
+        let recorder = LoginItemRecorder(status: .requiresApproval, statusAfterRegistration: .requiresApproval)
+        let manager = recorder.manager
 
-        #expect(!manager.isEnabled)
+        try manager.setEnabled(true)
+
+        #expect(recorder.didOpenSettings)
+    }
+
+    @Test("Disabling unregisters the main app")
+    func disableLoginItem() throws {
+        let recorder = LoginItemRecorder(status: .enabled)
+
+        try recorder.manager.setEnabled(false)
+
+        #expect(recorder.didUnregister)
+    }
+}
+
+private final class LoginItemRecorder {
+    var currentStatus: LoginItemStatus
+    var didRegister = false
+    var didUnregister = false
+    var didOpenSettings = false
+    let statusAfterRegistration: LoginItemStatus
+
+    init(status: LoginItemStatus = .disabled, statusAfterRegistration: LoginItemStatus = .enabled) {
+        currentStatus = status
+        self.statusAfterRegistration = statusAfterRegistration
+    }
+
+    var manager: LoginItemManager {
+        LoginItemManager(
+            status: { self.currentStatus },
+            register: {
+                self.didRegister = true
+                self.currentStatus = self.statusAfterRegistration
+            },
+            unregister: {
+                self.didUnregister = true
+                self.currentStatus = .disabled
+            },
+            openSettings: { self.didOpenSettings = true }
+        )
     }
 }

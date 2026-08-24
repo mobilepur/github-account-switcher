@@ -10,13 +10,20 @@ class GhSwitcher < Formula
   def install
     system "swift", "build", "--disable-sandbox", "-c", "release"
     bin.install ".build/release/gh-switcher"
-    bin.install ".build/release/gh-switcher-menubar"
+    app = prefix/"GitHub Account Switcher.app"
+    (app/"Contents/MacOS").install ".build/release/gh-switcher-menubar"
+    (app/"Contents").install "App/Info.plist"
+    system "codesign", "--force", "--deep", "--sign", "-", app
+    bin.install_symlink app/"Contents/MacOS/gh-switcher-menubar"
   end
 
-  service do
-    run [opt_bin/"gh-switcher-menubar"]
-    keep_alive true
-    process_type :interactive
+  def caveats
+    <<~EOS
+      Start the menu bar app with:
+        open "#{opt_prefix}/GitHub Account Switcher.app"
+
+      You can then enable Start at Login from the menu bar settings.
+    EOS
   end
 
   test do

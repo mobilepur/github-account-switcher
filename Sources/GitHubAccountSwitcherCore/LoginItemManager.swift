@@ -1,48 +1,66 @@
 import Foundation
+import ServiceManagement
 
-public struct LoginItemManager: Sendable {
-    private let plistURL: URL
-    private let executablePath: String
+public enum LoginItemStatus: Equatable, Sendable {
+    case enabled
+    case disabled
+    case requiresApproval
+    case unavailable
+}
+
+public struct LoginItemManager {
+    private let statusProvider: () -> LoginItemStatus
+    private let registerAction: () throws -> Void
+    private let unregisterAction: () throws -> Void
+    private let openSettingsAction: () -> Void
 
     public static var live: LoginItemManager {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+        guard Bundle.main.bundleURL.pathExtension == "app" else {
+            return LoginItemManager(status: { .unavailable })
+        }
+        let service = SMAppService.mainApp
         return LoginItemManager(
-            plistURL: home.appending(path: "Library/LaunchAgents/com.mobilepur.github-account-switcher.plist"),
-            executablePath: Bundle.main.executableURL?.path ?? CommandLine.arguments[0]
+            status: {
+                switch service.status {
+                case .enabled: .enabled
+                case .requiresApproval: .requiresApproval
+                case .notRegistered, .notFound: .disabled
+                @unknown default: .disabled
+                }
+            },
+            register: { try service.register() },
+            unregister: { try service.unregister() },
+            openSettings: { SMAppService.openSystemSettingsLoginItems() }
         )
     }
 
-    public init(plistURL: URL, executablePath: String) {
-        self.plistURL = plistURL
-        self.executablePath = executablePath
+    public init(
+        status: @escaping () -> LoginItemStatus,
+        register: @escaping () throws -> Void = {},
+        unregister: @escaping () throws -> Void = {},
+        openSettings: @escaping () -> Void = {}
+    ) {
+        statusProvider = status
+        registerAction = register
+        unregisterAction = unregister
+        openSettingsAction = openSettings
     }
 
-    public var isEnabled: Bool {
-        FileManager.default.fileExists(atPath: plistURL.path)
-    }
+    public var status: LoginItemStatus { statusProvider() }
+    public var isEnabled: Bool { status == .enabled }
 
     public func setEnabled(_ enabled: Bool) throws {
         if enabled {
-            try FileManager.default.createDirectory(
-                at: plistURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            let plist: [String: Any] = [
-                "Label": "com.mobilepur.github-account-switcher",
-                "ProgramArguments": [executablePath],
-                "RunAtLoad": true,
-                "EnvironmentVariables": [
-                    "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-                ],
-            ]
-            let data = try PropertyListSerialization.data(
-                fromPropertyList: plist,
-                format: .xml,
-                options: 0
-            )
-            try data.write(to: plistURL, options: .atomic)
-        } else if isEnabled {
-            try FileManager.default.removeItem(at: plistURL)
+            try registerAction()
+            if status == .requiresApproval {
+                openSettingsAction()
+            }
+        } else {
+            try unregisterAction()
         }
+    }
+
+    public func openSystemSettings() {
+        openSettingsAction()
     }
 }
