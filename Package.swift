@@ -23,5 +23,9 @@ let package = Package(
             name: "GitHubAccountSwitcherCoreTests",
             dependencies: ["GitHubAccountSwitcherCore"]
         ),
+        .testTarget(
+            name: "GitHubAccountSwitcherMenuBarTests",
+            dependencies: ["GitHubAccountSwitcherMenuBar"]
+        ),
     ]
 )
