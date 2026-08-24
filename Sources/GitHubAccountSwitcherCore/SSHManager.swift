@@ -1,5 +1,12 @@
 import Foundation
 
+public enum SSHKeyFile {
+    public static func isSelectable(_ url: URL) -> Bool {
+        let name = url.lastPathComponent
+        return !name.hasSuffix(".pub") && name != "config" && !name.hasPrefix("known_hosts")
+    }
+}
+
 struct SSHMapping: Codable, Equatable, Sendable {
     let keyPath: String
     let alias: String?
@@ -36,6 +43,9 @@ struct SSHManager {
         let expandedPath = NSString(string: keyPath).expandingTildeInPath
         guard !expandedPath.hasSuffix(".pub") else {
             throw SSHManagerError.message("Select the private SSH key, not the .pub file.")
+        }
+        guard SSHKeyFile.isSelectable(URL(fileURLWithPath: expandedPath)) else {
+            throw SSHManagerError.message("Select a private SSH key, not config or known_hosts.")
         }
         guard !expandedPath.contains(where: { $0 == "\n" || $0 == "\r" || $0 == "\"" }) else {
             throw SSHManagerError.message("SSH key path contains unsupported characters.")

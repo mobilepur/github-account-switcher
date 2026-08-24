@@ -47,6 +47,20 @@ struct SSHMappingTests {
         }
     }
 
+    @Test("Link rejects SSH configuration files", arguments: ["config", "known_hosts", "known_hosts.old"])
+    func linkRejectsConfigurationFile(name: String) throws {
+        try withFixture { fixture in
+            let file = try fixture.createKey(name)
+            let result = CLI.run(
+                arguments: ["ssh", "link", "mobilepur", file.path],
+                ghClient: fixture.gh,
+                sshManager: fixture.manager
+            )
+
+            #expect(result == .init(exitCode: 1, output: "Select a private SSH key, not config or known_hosts."))
+        }
+    }
+
     @Test("Mappings lists aliases and key paths")
     func mappingsListsStoredValues() throws {
         try withFixture { fixture in

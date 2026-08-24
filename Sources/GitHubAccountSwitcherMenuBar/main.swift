@@ -107,6 +107,8 @@ final class MenuBarModel {
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = false
         panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".ssh")
+        let panelDelegate = PrivateKeyPanelDelegate()
+        panel.delegate = panelDelegate
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
         do {
@@ -119,6 +121,15 @@ final class MenuBarModel {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+}
+
+final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
+    func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
+        if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+            return true
+        }
+        return SSHKeyFile.isSelectable(url)
     }
 }
 
