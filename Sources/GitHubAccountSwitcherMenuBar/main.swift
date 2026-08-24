@@ -14,6 +14,14 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             MainPanelView(model: model) {
                 openSettings()
                 NSApplication.shared.activate(ignoringOtherApps: true)
+                DispatchQueue.main.async {
+                    guard let window = NSApplication.shared.windows.first(where: {
+                        $0.title.localizedCaseInsensitiveContains("settings")
+                    }) else { return }
+                    window.setContentSize(NSSize(width: 520, height: 368))
+                    window.center()
+                    window.makeKeyAndOrderFront(nil)
+                }
             }
         } label: {
             Image(nsImage: menuBarImage(for: model.activeAccount?.menuBarAbbreviation ?? "---"))
@@ -24,6 +32,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
         Settings {
             SettingsView(model: model)
         }
+        .windowResizability(.contentSize)
     }
 
     private func menuBarImage(for abbreviation: String) -> NSImage {
@@ -230,6 +239,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            Spacer()
             HStack {
                 Spacer()
                 Button("Refresh") { model.reload() }
@@ -241,7 +251,7 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 520)
+        .frame(width: 520, height: 368)
         .alert(
             "Remove \(accountToRemove?.login ?? "account")?",
             isPresented: Binding(
