@@ -21,7 +21,7 @@ struct GHCommandTests {
             alias: "mobile"
         )
 
-        #expect(account.menuBarAbbreviation == "mo")
+        #expect(account.menuBarAbbreviation == "MO")
     }
 
     @Test("Menu bar abbreviation falls back to the GitHub login")
@@ -33,7 +33,7 @@ struct GHCommandTests {
             alias: nil
         )
 
-        #expect(account.menuBarAbbreviation == "na")
+        #expect(account.menuBarAbbreviation == "NA")
     }
 
     @Test("Accounts lists GitHub CLI accounts and marks the active account")
