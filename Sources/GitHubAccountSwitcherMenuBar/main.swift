@@ -6,7 +6,6 @@ import SwiftUI
 @main
 struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @Environment(\.openSettings) private var openSettings
     @State private var model = MenuBarModel()
 
     var body: some Scene {
@@ -23,18 +22,40 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 }
             }
             Divider()
-            Button {
-                openSettings()
-                NSApplication.shared.activate(ignoringOtherApps: true)
-            } label: {
-                Text("Settings…")
-                    .frame(minWidth: 170, alignment: .leading)
-            }
-            Button {
-                model.reload()
-            } label: {
-                Text("Refresh")
-                    .frame(minWidth: 170, alignment: .leading)
+            Menu("Settings") {
+                Menu("GitHub Accounts") {
+                    if model.accounts.isEmpty {
+                        Text("No accounts found in gh")
+                    }
+                    ForEach(model.accounts) { account in
+                        Menu {
+                            if let keyPath = account.sshKeyPath {
+                                Text(keyPath)
+                                Button("Change private key…") {
+                                    model.link(account, alias: account.alias ?? "")
+                                }
+                                Menu("Remove link") {
+                                    Button("Confirm removal", role: .destructive) {
+                                        model.unlink(account)
+                                    }
+                                }
+                            } else {
+                                Button("Link private key…") {
+                                    model.link(account, alias: "")
+                                }
+                            }
+                        } label: {
+                            if account.isConfigured {
+                                Label(account.displayName, systemImage: "checkmark.circle.fill")
+                            } else {
+                                Text(account.displayName)
+                            }
+                        }
+                    }
+                }
+                Button("Refresh") {
+                    model.reload()
+                }
             }
             Button {
                 NSApplication.shared.terminate(nil)
@@ -47,26 +68,22 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
         }
         .menuBarExtraStyle(.menu)
-
-        Settings {
-            SettingsView(model: model)
-        }
     }
 
     private func menuBarImage(for abbreviation: String) -> NSImage {
-        let size = NSSize(width: 34, height: 20)
+        let size = NSSize(width: 42, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let arrow = NSBezierPath()
             arrow.move(to: NSPoint(x: 0, y: rect.midY))
-            arrow.line(to: NSPoint(x: 7, y: 20))
-            arrow.line(to: NSPoint(x: 7, y: 18))
-            arrow.line(to: NSPoint(x: 27, y: 18))
-            arrow.line(to: NSPoint(x: 27, y: 20))
-            arrow.line(to: NSPoint(x: 34, y: rect.midY))
-            arrow.line(to: NSPoint(x: 27, y: 0))
-            arrow.line(to: NSPoint(x: 27, y: 2))
-            arrow.line(to: NSPoint(x: 7, y: 2))
-            arrow.line(to: NSPoint(x: 7, y: 0))
+            arrow.line(to: NSPoint(x: 8, y: 20))
+            arrow.line(to: NSPoint(x: 8, y: 18))
+            arrow.line(to: NSPoint(x: 34, y: 18))
+            arrow.line(to: NSPoint(x: 34, y: 20))
+            arrow.line(to: NSPoint(x: 42, y: rect.midY))
+            arrow.line(to: NSPoint(x: 34, y: 0))
+            arrow.line(to: NSPoint(x: 34, y: 2))
+            arrow.line(to: NSPoint(x: 8, y: 2))
+            arrow.line(to: NSPoint(x: 8, y: 0))
             arrow.close()
             NSColor.black.setFill()
             arrow.fill()
@@ -169,146 +186,5 @@ final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
             return true
         }
         return SSHKeyFile.isSelectable(url)
-    }
-}
-
-struct SettingsView: View {
-    let model: MenuBarModel
-    @State private var aliases: [String: String] = [:]
-    @State private var isAddingAccount = false
-    @State private var accountToRemove: GitHubAccount?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("GitHub Accounts").font(.title2)
-            if model.configuredAccounts.isEmpty {
-                Text("No accounts linked yet.")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(model.configuredAccounts) { account in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(account.displayName).font(.headline)
-                            if account.alias != nil {
-                                Text("GitHub: \(account.login)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Text(account.sshKeyPath ?? "")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        TextField("Alias (optional)", text: aliasBinding(for: account))
-                            .frame(width: 140)
-                        Button("Change…") {
-                            model.link(account, alias: aliases[account.login] ?? account.alias ?? "")
-                        }
-                        Button(role: .destructive) {
-                            accountToRemove = account
-                        } label: {
-                            Image(systemName: "xmark")
-                        }
-                        .buttonStyle(.borderless)
-                        .help("Remove account link")
-                        .accessibilityLabel("Remove \(account.displayName)")
-                    }
-                }
-            }
-            Button("Add GitHub Account…") {
-                isAddingAccount = true
-            }
-            if let error = model.error {
-                Text(error).foregroundStyle(.red).font(.caption)
-            }
-        }
-        .padding(20)
-        .frame(minWidth: 460)
-        .sheet(isPresented: $isAddingAccount) {
-            AddAccountView(model: model)
-        }
-        .alert(
-            "Remove \(accountToRemove?.displayName ?? "account")?",
-            isPresented: Binding(
-                get: { accountToRemove != nil },
-                set: { if !$0 { accountToRemove = nil } }
-            ),
-            presenting: accountToRemove
-        ) { account in
-            Button("Remove", role: .destructive) {
-                model.unlink(account)
-                accountToRemove = nil
-            }
-            Button("Cancel", role: .cancel) {
-                accountToRemove = nil
-            }
-        } message: { account in
-            Text("This removes the local SSH key and alias link for \(account.login). The account remains signed in to gh.")
-        }
-    }
-
-    private func aliasBinding(for account: GitHubAccount) -> Binding<String> {
-        Binding(
-            get: { aliases[account.login] ?? account.alias ?? "" },
-            set: { aliases[account.login] = $0 }
-        )
-    }
-}
-
-struct AddAccountView: View {
-    let model: MenuBarModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var aliases: [String: String] = [:]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Add GitHub Account").font(.title2)
-                Spacer()
-                Button("Done") { dismiss() }
-            }
-            if model.accounts.isEmpty {
-                Text("No accounts found in gh. Add one with gh auth login, then refresh.")
-                    .foregroundStyle(.secondary)
-            } else {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Choose the private key belonging to the GitHub account.")
-                        .font(.headline)
-                    Text("It is usually in ~/.ssh and has a name like id_ed25519. Choose the file without .pub — never config or known_hosts.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(model.accounts) { account in
-                    HStack {
-                        Text(account.displayName).font(.headline)
-                        if account.isConfigured {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .accessibilityLabel("Linked")
-                        }
-                        Spacer()
-                        if !account.isConfigured {
-                            TextField("Alias (optional)", text: aliasBinding(for: account))
-                                .frame(width: 140)
-                            Button("Choose private key…") {
-                                model.link(account, alias: aliases[account.login] ?? "")
-                            }
-                        }
-                    }
-                }
-            }
-            if let error = model.error {
-                Text(error).foregroundStyle(.red).font(.caption)
-            }
-        }
-        .padding(20)
-        .frame(minWidth: 520, minHeight: 180)
-    }
-
-    private func aliasBinding(for account: GitHubAccount) -> Binding<String> {
-        Binding(
-            get: { aliases[account.login] ?? "" },
-            set: { aliases[account.login] = $0 }
-        )
     }
 }
