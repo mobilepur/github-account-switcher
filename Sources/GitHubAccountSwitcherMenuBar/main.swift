@@ -169,9 +169,14 @@ struct SettingsView: View {
                         Button("Change…") {
                             model.link(account, alias: aliases[account.login] ?? account.alias ?? "")
                         }
-                        Button("Remove", role: .destructive) {
+                        Button(role: .destructive) {
                             accountToRemove = account
+                        } label: {
+                            Image(systemName: "xmark")
                         }
+                        .buttonStyle(.borderless)
+                        .help("Remove account link")
+                        .accessibilityLabel("Remove \(account.displayName)")
                     }
                 }
             }
