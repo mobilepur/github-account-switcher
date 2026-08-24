@@ -13,6 +13,13 @@ struct GHCommandTests {
         #expect(AccountService.sortedLexicographically(accounts).map(\.login) == ["MobilePur", "nayooti"])
     }
 
+    @Test("GitHub account exposes its public avatar URL")
+    func githubAvatarURLUsesLogin() {
+        let account = GitHubAccount(login: "mobilepur", isActive: true, sshKeyPath: nil, alias: nil)
+
+        #expect(account.avatarURL?.absoluteString == "https://github.com/mobilepur.png?size=80")
+    }
+
     @Test("An account is configured only when it has an SSH key")
     func configuredAccountRequiresSSHKey() {
         let configured = GitHubAccount(login: "mobilepur", isActive: true, sshKeyPath: "/tmp/key", alias: nil)

@@ -8,10 +8,13 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openSettings) private var openSettings
     @State private var model = MenuBarModel()
+    @State private var activeAvatar: NSImage?
+    @AppStorage("useGitHubAvatars") private var useGitHubAvatars = true
 
     var body: some Scene {
         MenuBarExtra {
             MainPanelView(model: model) {
+                NSApplication.shared.keyWindow?.orderOut(nil)
                 openSettings()
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 DispatchQueue.main.async {
@@ -24,8 +27,14 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 }
             }
         } label: {
-            Image(nsImage: menuBarImage(for: model.activeAccount?.menuBarAbbreviation ?? "---"))
+            Image(nsImage: menuBarImage(
+                for: model.activeAccount?.menuBarAbbreviation ?? "--",
+                avatar: useGitHubAvatars ? activeAvatar : nil
+            ))
             .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
+            .task(id: model.activeAccount?.login) {
+                activeAvatar = await loadAvatar(for: model.activeAccount)
+            }
         }
         .menuBarExtraStyle(.window)
 
@@ -35,7 +44,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
         .windowResizability(.contentSize)
     }
 
-    private func menuBarImage(for abbreviation: String) -> NSImage {
+    private func menuBarImage(for abbreviation: String, avatar: NSImage?) -> NSImage {
         let size = NSSize(width: 34, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let arrow = NSBezierPath()
@@ -50,75 +59,141 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             arrow.line(to: NSPoint(x: 7, y: 2))
             arrow.line(to: NSPoint(x: 7, y: 0))
             arrow.close()
-            NSColor.black.setFill()
+            NSColor.labelColor.setFill()
             arrow.fill()
 
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                .foregroundColor: NSColor.black,
-            ]
-            let text = abbreviation as NSString
-            let textSize = text.size(withAttributes: attributes)
-            NSGraphicsContext.current?.compositingOperation = .destinationOut
-            text.draw(
-                at: NSPoint(
-                    x: (rect.width - textSize.width) / 2,
-                    y: (rect.height - textSize.height) / 2
-                ),
-                withAttributes: attributes
-            )
-            NSGraphicsContext.current?.compositingOperation = .sourceOver
+            if let avatar {
+                NSGraphicsContext.saveGraphicsState()
+                NSBezierPath(ovalIn: NSRect(x: 10, y: 3, width: 14, height: 14)).addClip()
+                avatar.draw(in: NSRect(x: 10, y: 3, width: 14, height: 14))
+                NSGraphicsContext.restoreGraphicsState()
+            } else {
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                    .foregroundColor: NSColor.black,
+                ]
+                let text = abbreviation as NSString
+                let textSize = text.size(withAttributes: attributes)
+                NSGraphicsContext.current?.compositingOperation = .destinationOut
+                text.draw(
+                    at: NSPoint(
+                        x: (rect.width - textSize.width) / 2,
+                        y: (rect.height - textSize.height) / 2
+                    ),
+                    withAttributes: attributes
+                )
+                NSGraphicsContext.current?.compositingOperation = .sourceOver
+            }
             return true
         }
-        image.isTemplate = true
+        image.isTemplate = avatar == nil
         return image
+    }
+
+    private func loadAvatar(for account: GitHubAccount?) async -> NSImage? {
+        guard let url = account?.avatarURL else { return nil }
+        guard let (data, response) = try? await URLSession.shared.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return NSImage(data: data)
     }
 }
 
 struct MainPanelView: View {
     let model: MenuBarModel
     let showSettings: () -> Void
+    private let loginItemManager = LoginItemManager.live
+    @AppStorage("useGitHubAvatars") private var useGitHubAvatars = true
+    @State private var startsAtLogin = false
+    @State private var loginItemError: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Accounts")
-                .font(.headline)
-            if model.configuredAccounts.isEmpty {
-                Text("No accounts configured.")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(model.configuredAccounts) { account in
-                    Button {
-                        model.select(account.login)
-                    } label: {
-                        HStack {
-                            Text(account.displayName)
-                            Spacer()
-                            if account.isActive {
-                                Image(systemName: "checkmark")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    if model.configuredAccounts.isEmpty {
+                        Text("No accounts configured.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(model.configuredAccounts) { account in
+                            Button {
+                                model.select(account.login)
+                            } label: {
+                                HStack {
+                                    GitHubAvatarView(account: account, size: 24)
+                                    Text(account.displayName)
+                                    Spacer()
+                                    if account.isActive {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .buttonStyle(.plain)
                 }
             }
+            .frame(height: accountListHeight)
             if let error = model.error {
                 Text(error)
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-            Spacer(minLength: 12)
             Divider()
-            Button("Settings", action: showSettings)
+            Text("Settings")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Button(action: showSettings) {
+                HStack {
+                    Text("Configure Accounts")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+            }
                 .buttonStyle(.plain)
+            Toggle("Start at Login", isOn: startAtLoginBinding)
+                .disabled(loginItemManager.status == .unavailable)
+            Toggle("Use GitHub Avatars", isOn: $useGitHubAvatars)
+            if let loginItemError {
+                Text(loginItemError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+            Spacer(minLength: 8)
+            Divider()
             Button("Quit") {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.plain)
         }
         .padding(14)
-        .frame(width: 240)
-        .frame(minHeight: 200)
+        .frame(width: 240, height: 300)
+        .onAppear {
+            startsAtLogin = loginItemManager.isEnabled
+        }
+    }
+
+    private var accountListHeight: CGFloat {
+        min(CGFloat(max(model.configuredAccounts.count, 1)) * 32, 104)
+    }
+
+    private var startAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { startsAtLogin },
+            set: { enabled in
+                do {
+                    try loginItemManager.setEnabled(enabled)
+                    startsAtLogin = loginItemManager.isEnabled
+                    loginItemError = nil
+                } catch {
+                    loginItemError = error.localizedDescription
+                }
+            }
+        )
     }
 }
 
@@ -203,6 +278,7 @@ final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
 
 struct SettingsView: View {
     let model: MenuBarModel
+    @Environment(\.dismiss) private var dismiss
     @State private var accountToRemove: GitHubAccount?
 
     var body: some View {
@@ -210,39 +286,46 @@ struct SettingsView: View {
             Text("GitHub Accounts")
                 .font(.title2)
             if model.accounts.isEmpty {
-                Text("No accounts found in gh. Add one with gh auth login, then refresh.")
+                Text("No accounts found in gh. Add one with gh auth login, then reopen Account Settings.")
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(model.accounts) { account in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(account.login)
-                                .font(.headline)
-                            Text(account.sshKeyPath ?? "No private key linked")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Button(account.isConfigured ? "Change key…" : "Link key…") {
-                            model.link(account, alias: account.alias ?? "")
-                        }
-                        if account.isConfigured {
-                            Button(role: .destructive) {
-                                accountToRemove = account
-                            } label: {
-                                Image(systemName: "xmark")
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(model.accounts) { account in
+                            HStack {
+                                GitHubAvatarView(account: account)
+                                VStack(alignment: .leading) {
+                                    Text(account.login)
+                                        .font(.headline)
+                                    Text(account.sshKeyPath ?? "No private key linked")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button(account.isConfigured ? "Change key…" : "Link key…") {
+                                    model.link(account, alias: account.alias ?? "")
+                                }
+                                if account.isConfigured {
+                                    Button(role: .destructive) {
+                                        accountToRemove = account
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("Remove account link")
+                                    .accessibilityLabel("Remove \(account.login)")
+                                }
                             }
-                            .buttonStyle(.borderless)
-                            .help("Remove account link")
-                            .accessibilityLabel("Remove \(account.login)")
                         }
                     }
                 }
             }
-            Spacer()
             HStack {
                 Spacer()
-                Button("Refresh") { model.reload() }
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
             }
             if let error = model.error {
                 Text(error)
@@ -252,6 +335,7 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 520, height: 368)
+        .onAppear { model.reload() }
         .alert(
             "Remove \(accountToRemove?.login ?? "account")?",
             isPresented: Binding(
@@ -270,5 +354,30 @@ struct SettingsView: View {
         } message: { account in
             Text("This removes the local private-key link for \(account.login). The account remains signed in to gh.")
         }
+    }
+
+}
+
+struct GitHubAvatarView: View {
+    let account: GitHubAccount
+    var size: CGFloat = 36
+
+    var body: some View {
+        AsyncImage(url: account.avatarURL) { phase in
+            if case let .success(image) = phase {
+                image
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    Circle().fill(.quaternary)
+                    Text(account.menuBarAbbreviation)
+                        .font(.caption.bold())
+                }
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .accessibilityLabel("GitHub avatar for \(account.login)")
     }
 }
