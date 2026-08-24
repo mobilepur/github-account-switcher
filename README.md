@@ -1,8 +1,11 @@
 # GitHub Account Switcher
 
-A small CLI for switching GitHub accounts using your existing SSH configuration.
+A small wrapper for switching between accounts authenticated with the GitHub CLI.
 
 > Work in progress.
+
+Requires the [GitHub CLI](https://cli.github.com/) with at least one authenticated
+account.
 
 ## Development
 
@@ -15,12 +18,12 @@ swift test
 
 ```sh
 gh-switcher accounts
-gh-switcher account link ~/.ssh/id_ed25519 [--alias personal]
-gh-switcher account unlink personal
+gh-switcher use mobilepur
+gh-switcher current
 ```
 
-Linked accounts are stored locally. The CLI records the SSH key path, but does
-not read or copy the private key.
+Accounts and the active login are read from `gh`. SSH key mapping will be added
+separately.
 
 ## License
 
