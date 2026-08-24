@@ -8,7 +8,7 @@ struct CLICommandTests {
         let result = CLI.run(arguments: [])
 
         #expect(result.exitCode == 0)
-        #expect(result.output.contains("Usage: gas"))
+        #expect(result.output.contains("Usage: gh-switcher"))
     }
 
     @Test("Version command displays the current version")
@@ -16,6 +16,6 @@ struct CLICommandTests {
         let result = CLI.run(arguments: ["version"])
 
         #expect(result.exitCode == 0)
-        #expect(result.output == "gas 0.1.0")
+        #expect(result.output == "gh-switcher 0.1.0")
     }
 }
