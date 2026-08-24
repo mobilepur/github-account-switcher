@@ -12,6 +12,7 @@ class GhSwitcher < Formula
     bin.install ".build/release/gh-switcher"
     app = prefix/"GitHub Account Switcher.app"
     (app/"Contents/MacOS").install ".build/release/gh-switcher-menubar"
+    (app/"Contents/Resources").install "App/AppIcon.icns"
     (app/"Contents").install "App/Info.plist"
     system "codesign", "--force", "--deep", "--sign", "-", app
     bin.install_symlink app/"Contents/MacOS/gh-switcher-menubar"

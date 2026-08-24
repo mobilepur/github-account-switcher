@@ -8,6 +8,8 @@
     <string>com.mobilepur.github-account-switcher</string>
     <key>CFBundleName</key>
     <string>GitHub Account Switcher</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
