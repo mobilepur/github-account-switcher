@@ -19,15 +19,29 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                     model.select(account.login)
                 } label: {
                     Text("\(account.isActive ? "✓ " : "")\(account.displayName)")
+                        .frame(minWidth: 170, alignment: .leading)
                 }
             }
             Divider()
-            Button("Settings…") {
+            Button {
                 openSettings()
                 NSApplication.shared.activate(ignoringOtherApps: true)
+            } label: {
+                Text("Settings…")
+                    .frame(minWidth: 170, alignment: .leading)
             }
-            Button("Refresh") { model.reload() }
-            Button("Quit") { NSApplication.shared.terminate(nil) }
+            Button {
+                model.reload()
+            } label: {
+                Text("Refresh")
+                    .frame(minWidth: 170, alignment: .leading)
+            }
+            Button {
+                NSApplication.shared.terminate(nil)
+            } label: {
+                Text("Quit")
+                    .frame(minWidth: 170, alignment: .leading)
+            }
         } label: {
             Image(nsImage: menuBarImage(for: model.activeAccount?.menuBarAbbreviation ?? "---"))
             .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
