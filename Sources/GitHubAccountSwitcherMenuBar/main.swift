@@ -26,16 +26,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
             Button("Refresh") { model.reload() }
             Button("Quit") { NSApplication.shared.terminate(nil) }
         } label: {
-            VStack(spacing: -1) {
-                Text(model.activeAccount?.menuBarAbbreviation ?? "---")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .lineLimit(1)
-                    .frame(height: 10)
-                Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 7, weight: .semibold))
-                    .frame(height: 8)
-            }
-            .frame(width: 25, height: 20)
+            Image(nsImage: menuBarImage(for: model.activeAccount?.menuBarAbbreviation ?? "---"))
             .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
         }
         .menuBarExtraStyle(.menu)
@@ -43,6 +34,31 @@ struct GitHubAccountSwitcherMenuBarApp: App {
         Settings {
             SettingsView(model: model)
         }
+    }
+
+    private func menuBarImage(for abbreviation: String) -> NSImage {
+        let size = NSSize(width: 25, height: 20)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 9, weight: .semibold),
+                .foregroundColor: NSColor.labelColor,
+            ]
+            let text = abbreviation as NSString
+            let textSize = text.size(withAttributes: attributes)
+            text.draw(
+                at: NSPoint(x: (rect.width - textSize.width) / 2, y: 10),
+                withAttributes: attributes
+            )
+
+            let symbol = NSImage(
+                systemSymbolName: "arrow.left.arrow.right",
+                accessibilityDescription: nil
+            )?.withSymbolConfiguration(.init(pointSize: 7, weight: .semibold))
+            symbol?.draw(in: NSRect(x: 8.5, y: 1, width: 8, height: 8))
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 }
 
