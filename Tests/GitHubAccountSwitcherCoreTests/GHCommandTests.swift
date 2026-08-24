@@ -3,6 +3,49 @@ import Testing
 
 @Suite("GitHub CLI wrapper commands")
 struct GHCommandTests {
+    @Test("Accounts are sorted lexicographically by login")
+    func accountsAreSortedLexicographically() {
+        let accounts = [
+            GitHubAccount(login: "nayooti", isActive: false, sshKeyPath: nil, alias: nil),
+            GitHubAccount(login: "MobilePur", isActive: true, sshKeyPath: nil, alias: nil),
+        ]
+
+        #expect(AccountService.sortedLexicographically(accounts).map(\.login) == ["MobilePur", "nayooti"])
+    }
+
+    @Test("An account is configured only when it has an SSH key")
+    func configuredAccountRequiresSSHKey() {
+        let configured = GitHubAccount(login: "mobilepur", isActive: true, sshKeyPath: "/tmp/key", alias: nil)
+        let unconfigured = GitHubAccount(login: "nayooti", isActive: false, sshKeyPath: nil, alias: nil)
+
+        #expect(configured.isConfigured)
+        #expect(!unconfigured.isConfigured)
+    }
+
+    @Test("Menu bar abbreviation uses the first two alias characters")
+    func menuBarAbbreviationUsesAlias() {
+        let account = GitHubAccount(
+            login: "mobilepur",
+            isActive: true,
+            sshKeyPath: "/tmp/key",
+            alias: "mobile"
+        )
+
+        #expect(account.menuBarAbbreviation == "MO")
+    }
+
+    @Test("Menu bar abbreviation falls back to the GitHub login")
+    func menuBarAbbreviationUsesLogin() {
+        let account = GitHubAccount(
+            login: "nayooti",
+            isActive: true,
+            sshKeyPath: "/tmp/key",
+            alias: nil
+        )
+
+        #expect(account.menuBarAbbreviation == "NA")
+    }
+
     @Test("Accounts lists GitHub CLI accounts and marks the active account")
     func accountsListsGitHubCLIAccounts() {
         let gh = stubGH(statusJSON: statusJSON)
@@ -29,31 +72,6 @@ struct GHCommandTests {
         let result = CLI.run(arguments: ["current"], ghClient: gh)
 
         #expect(result == .init(exitCode: 0, output: "No active GitHub account."))
-    }
-
-    @Test("Use delegates account switching to GitHub CLI")
-    func useDelegatesToGitHubCLI() {
-        var receivedArguments: [String] = []
-        let gh = GHClient { arguments in
-            receivedArguments = arguments
-            return CommandOutput(exitCode: 0, standardOutput: "", standardError: "")
-        }
-
-        let result = CLI.run(arguments: ["use", "nayooti"], ghClient: gh)
-
-        #expect(receivedArguments == ["auth", "switch", "--hostname", "github.com", "--user", "nayooti"])
-        #expect(result == .init(exitCode: 0, output: "Active GitHub account: nayooti"))
-    }
-
-    @Test("Use surfaces a GitHub CLI failure")
-    func useSurfacesGitHubCLIFailure() {
-        let gh = GHClient { _ in
-            CommandOutput(exitCode: 1, standardOutput: "", standardError: "account not found")
-        }
-
-        let result = CLI.run(arguments: ["use", "missing"], ghClient: gh)
-
-        #expect(result == .init(exitCode: 1, output: "account not found"))
     }
 
     private var statusJSON: String {

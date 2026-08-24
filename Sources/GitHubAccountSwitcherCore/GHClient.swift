@@ -38,8 +38,14 @@ struct GHClient {
         let process = Process()
         let standardOutput = Pipe()
         let standardError = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["gh"] + arguments
+        let candidates = ["/opt/homebrew/bin/gh", "/usr/local/bin/gh"]
+        if let executable = candidates.first(where: FileManager.default.fileExists(atPath:)) {
+            process.executableURL = URL(fileURLWithPath: executable)
+            process.arguments = arguments
+        } else {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = ["gh"] + arguments
+        }
         process.standardOutput = standardOutput
         process.standardError = standardError
 
