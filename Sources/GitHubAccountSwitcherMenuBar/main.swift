@@ -40,10 +40,10 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     }
 
     private func menuBarImage(for abbreviation: String) -> NSImage {
-        let size = NSSize(width: 28, height: 20)
+        let size = NSSize(width: 32, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
+                .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
                 .foregroundColor: NSColor.labelColor,
             ]
             let text = abbreviation as NSString
