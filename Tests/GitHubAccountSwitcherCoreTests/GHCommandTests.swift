@@ -12,7 +12,7 @@ struct GHCommandTests {
         #expect(!unconfigured.isConfigured)
     }
 
-    @Test("Menu bar abbreviation uses the first three alias characters")
+    @Test("Menu bar abbreviation uses the first two alias characters")
     func menuBarAbbreviationUsesAlias() {
         let account = GitHubAccount(
             login: "mobilepur",
@@ -21,7 +21,7 @@ struct GHCommandTests {
             alias: "mobile"
         )
 
-        #expect(account.menuBarAbbreviation == "mob")
+        #expect(account.menuBarAbbreviation == "mo")
     }
 
     @Test("Menu bar abbreviation falls back to the GitHub login")
@@ -33,7 +33,7 @@ struct GHCommandTests {
             alias: nil
         )
 
-        #expect(account.menuBarAbbreviation == "nay")
+        #expect(account.menuBarAbbreviation == "na")
     }
 
     @Test("Accounts lists GitHub CLI accounts and marks the active account")

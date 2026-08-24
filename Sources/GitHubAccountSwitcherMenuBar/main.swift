@@ -40,14 +40,30 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     }
 
     private func menuBarImage(for abbreviation: String) -> NSImage {
-        let size = NSSize(width: 32, height: 20)
+        let size = NSSize(width: 34, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
+            let arrow = NSBezierPath()
+            arrow.move(to: NSPoint(x: 0, y: rect.midY))
+            arrow.line(to: NSPoint(x: 7, y: 18))
+            arrow.line(to: NSPoint(x: 7, y: 16))
+            arrow.line(to: NSPoint(x: 27, y: 16))
+            arrow.line(to: NSPoint(x: 27, y: 18))
+            arrow.line(to: NSPoint(x: 34, y: rect.midY))
+            arrow.line(to: NSPoint(x: 27, y: 2))
+            arrow.line(to: NSPoint(x: 27, y: 4))
+            arrow.line(to: NSPoint(x: 7, y: 4))
+            arrow.line(to: NSPoint(x: 7, y: 2))
+            arrow.close()
+            NSColor.black.setFill()
+            arrow.fill()
+
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
-                .foregroundColor: NSColor.labelColor,
+                .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                .foregroundColor: NSColor.black,
             ]
             let text = abbreviation as NSString
             let textSize = text.size(withAttributes: attributes)
+            NSGraphicsContext.current?.compositingOperation = .destinationOut
             text.draw(
                 at: NSPoint(
                     x: (rect.width - textSize.width) / 2,
@@ -55,6 +71,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 ),
                 withAttributes: attributes
             )
+            NSGraphicsContext.current?.compositingOperation = .sourceOver
             return true
         }
         image.isTemplate = true
