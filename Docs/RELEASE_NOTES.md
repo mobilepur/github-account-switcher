@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.1.6 — 2026-08-25
+
+### Changed
+
+- The About section now uses a muted version link with a chevron and shows the
+  problem-reporting link without an icon.
+
 ## 0.1.5 — 2026-08-25
 
 ### Added

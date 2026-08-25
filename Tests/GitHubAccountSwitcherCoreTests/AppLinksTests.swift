@@ -6,8 +6,8 @@ struct AppLinksTests {
     @Test("App versions open their matching GitHub release notes")
     func appVersionOpensMatchingReleaseNotes() {
         #expect(
-            AppLinks.releaseNotes(version: "0.1.5").absoluteString
-                == "https://github.com/mobilepur/github-account-switcher/releases/tag/v0.1.5"
+            AppLinks.releaseNotes(version: "0.1.6").absoluteString
+                == "https://github.com/mobilepur/github-account-switcher/releases/tag/v0.1.6"
         )
     }
 
