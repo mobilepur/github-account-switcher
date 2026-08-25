@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Use Swift 6 release runner
+
+- Summary: Move the GitHub Actions release job from the macOS 14 image with
+  Swift 5.10 to the macOS 15 image required by the package's Swift 6 tools
+  version, and guard that runner contract with a packaging test.
+- Verification: Reproduced the GitHub Actions Swift toolchain failure, observed
+  the new workflow contract fail before and pass after the fix, and passed 26
+  Swift tests, universal release packaging, Homebrew style, shell and YAML
+  syntax, and `git diff --check`.
+
 ## 2026-08-25 — Harden Homebrew release retries
 
 - Summary: Clear quarantine only when present on the installed app and staged

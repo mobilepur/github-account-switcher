@@ -10,6 +10,7 @@
   available from Applications, Spotlight, and Launchpad.
 - Release tags now publish an ad-hoc signed universal app bundle and CLI with a
   pinned checksum, then update the versioned Cask in `mobilepur/homebrew-tap`.
+- Release automation now uses a Swift 6-capable macOS 15 runner.
 - The README now explains menu bar account switching, installation, and how the
   app handles SSH keys and GitHub credentials.
 

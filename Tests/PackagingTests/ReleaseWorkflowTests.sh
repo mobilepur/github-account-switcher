@@ -8,6 +8,11 @@ build_script="$repository_root/Scripts/build-release.sh"
 readme="$repository_root/README.md"
 release_guide="$repository_root/Docs/RELEASING.md"
 
+if ! grep -Fq 'runs-on: macos-15' "$workflow"; then
+    echo "Release workflow does not provide the Swift 6 toolchain required by Package.swift" >&2
+    exit 1
+fi
+
 grep -Fq 'git merge-base --is-ancestor "$GITHUB_SHA" origin/main' "$workflow"
 grep -Fq 'persist-credentials: false' "$workflow"
 grep -Fq 'Scripts/render-homebrew-cask.sh' "$workflow"
