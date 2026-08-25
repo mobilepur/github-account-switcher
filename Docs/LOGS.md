@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Refine About links and prepare 0.1.6
+
+- Summary: Style the About version link in muted gray with a right chevron,
+  remove the icon from problem reporting, and bump the app and CLI to 0.1.6.
+- Verification: Confirmed the original blue external-link treatment and problem
+  icon in the supplied screenshots, observed the 0.1.6 CLI version test fail
+  before implementation, then passed 27 Swift tests, the universal release
+  packaging test, property-list validation, a packaged-app visual check, and
+  `git diff --check`.
+
 ## 2026-08-25 — Add About section and prepare 0.1.5
 
 - Summary: Add an About section to the menu bar panel with the app name, a

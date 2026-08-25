@@ -179,16 +179,17 @@ struct MainPanelView: View {
                 Link(destination: AppLinks.releaseNotes(version: appVersion)) {
                     HStack(spacing: 4) {
                         Text(appVersion)
-                        Image(systemName: "arrow.up.right.square")
+                        Image(systemName: "chevron.right")
+                            .font(.caption.bold())
                     }
+                    .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
                 .help("View GitHub release notes for version \(appVersion)")
                 .accessibilityLabel("Version \(appVersion), GitHub Release Notes")
             }
-            Link(destination: AppLinks.newIssue) {
-                Label("Report a Problem…", systemImage: "exclamationmark.bubble")
-            }
-            .buttonStyle(.plain)
+            Link("Report a Problem…", destination: AppLinks.newIssue)
+                .buttonStyle(.plain)
             Spacer(minLength: 8)
             Divider()
             Button("Quit") {
