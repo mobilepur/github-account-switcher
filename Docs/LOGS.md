@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Add About section and prepare 0.1.5
+
+- Summary: Add an About section to the menu bar panel with the app name, a
+  version-specific GitHub release-notes link, and GitHub problem reporting;
+  bump the app and CLI to version 0.1.5 and add its release notes.
+- Verification: Observed the release-link and CLI-version tests fail before
+  implementation, then passed 27 Swift tests, the universal release packaging
+  test, property-list validation, a packaged-app visual check, and
+  `git diff --check`.
+
 ## 2026-08-25 — Use Swift 6 release runner
 
 - Summary: Move the GitHub Actions release job from the macOS 14 image with
