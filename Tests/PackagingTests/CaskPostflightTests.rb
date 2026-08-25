@@ -1,0 +1,111 @@
+# frozen_string_literal: true
+
+require "fileutils"
+require "open3"
+require "pathname"
+
+class CommandResult
+  def initialize(status)
+    @status = status
+  end
+
+  def success?
+    @status.success?
+  end
+
+  def exit_status
+    @status.exitstatus
+  end
+end
+
+class CaskPostflightHarness
+  attr_reader :app_path, :cli_path
+
+  def initialize(root)
+    @appdir = Pathname(root).join("Applications")
+    @staged_path = Pathname(root).join("staged")
+    @app_path = @appdir.join("GitHub Account Switcher.app")
+    @cli_path = @staged_path.join("gh-switcher")
+    FileUtils.mkdir_p(@app_path)
+    FileUtils.mkdir_p(@staged_path)
+    FileUtils.touch(@cli_path)
+  end
+
+  def load(cask_path)
+    Object.send(:define_method, :cask) do |_token, &block|
+      $cask_postflight_harness.instance_eval(&block)
+    end
+    $cask_postflight_harness = self
+    Kernel.load(cask_path)
+  ensure
+    Object.send(:remove_method, :cask)
+  end
+
+  def run
+    raise "Generated Cask has no postflight block" unless @postflight
+
+    instance_eval(&@postflight)
+  end
+
+  def postflight(&block)
+    @postflight = block
+  end
+
+  def appdir
+    @appdir
+  end
+
+  def staged_path
+    @staged_path
+  end
+
+  def system_command(executable, args:, must_succeed: true, print_stderr: true)
+    _stdout, stderr, status = Open3.capture3(executable, *args)
+    warn stderr if print_stderr && !stderr.empty?
+    raise "Command failed: #{executable} #{args.join(' ')}" if must_succeed && !status.success?
+
+    CommandResult.new(status)
+  end
+
+  def method_missing(_name, *_args, **_kwargs)
+    nil
+  end
+
+  def respond_to_missing?(_name, _include_private = false)
+    true
+  end
+end
+
+def set_quarantine(path)
+  _stdout, stderr, status = Open3.capture3(
+    "/usr/bin/xattr",
+    "-w",
+    "com.apple.quarantine",
+    "0081;00000000;Homebrew;00000000-0000-0000-0000-000000000000",
+    path.to_s,
+  )
+  raise stderr unless status.success?
+end
+
+def quarantined?(path)
+  _stdout, _stderr, status = Open3.capture3(
+    "/usr/bin/xattr",
+    "-p",
+    "com.apple.quarantine",
+    path.to_s,
+  )
+  status.success?
+end
+
+cask_path, root = ARGV
+harness = CaskPostflightHarness.new(root)
+harness.load(cask_path)
+
+harness.run
+
+set_quarantine(harness.app_path)
+set_quarantine(harness.cli_path)
+harness.run
+
+raise "App quarantine attribute was not removed" if quarantined?(harness.app_path)
+raise "CLI quarantine attribute was not removed" if quarantined?(harness.cli_path)

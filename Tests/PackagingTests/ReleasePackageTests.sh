@@ -54,3 +54,5 @@ if bash "$repository_root/Scripts/render-homebrew-cask.sh" "$app_version" invali
     echo "Cask renderer accepted an invalid checksum" >&2
     exit 1
 fi
+
+bash "$repository_root/Tests/PackagingTests/CaskPostflightTests.sh"

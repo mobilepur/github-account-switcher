@@ -39,5 +39,6 @@ archive checksum.
 8. Run `brew upgrade --cask github-account-switcher` or perform a fresh Cask
    installation.
 
-Re-running the workflow for the same tag replaces both release assets and then
-updates the Cask to the resulting checksum.
+Release assets are immutable after publication. Re-running the workflow for the
+same tag downloads and verifies the existing archive and checksum, then repairs
+only the Homebrew Cask. Changed artifacts require a new version and tag.

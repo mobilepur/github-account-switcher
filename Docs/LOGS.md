@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Harden Homebrew release retries
+
+- Summary: Clear quarantine only when present on the installed app and staged
+  CLI, and keep published tag assets immutable while allowing retries to repair
+  the Homebrew Cask from the existing checksum.
+- Verification: Cask postflight integration test, immutable-release workflow
+  contract, 26 Swift tests, universal release packaging, Homebrew style, shell,
+  Ruby, YAML, and property-list syntax, and `git diff --check` passed.
+
 ## 2026-08-25 — Match xlocal Homebrew release flow
 
 - Summary: Replace Developer ID signing and notarization with the xlocal-style

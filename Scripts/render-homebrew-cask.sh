@@ -40,8 +40,19 @@ cask "github-account-switcher" do
   binary "gh-switcher"
 
   postflight do
-    if system_command("/usr/bin/xattr", args: ["-h"]).exit_status.zero?
-      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", staged_path.to_s]
+    [
+      "#{appdir}/GitHub Account Switcher.app",
+      "#{staged_path}/gh-switcher",
+    ].each do |path|
+      quarantine = system_command(
+        "/usr/bin/xattr",
+        args:         ["-p", "com.apple.quarantine", path],
+        must_succeed: false,
+        print_stderr: false,
+      )
+      next unless quarantine&.success?
+
+      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", path]
     end
   end
 end

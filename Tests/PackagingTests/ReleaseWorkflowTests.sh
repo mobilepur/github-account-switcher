@@ -12,9 +12,14 @@ grep -Fq 'git merge-base --is-ancestor "$GITHUB_SHA" origin/main' "$workflow"
 grep -Fq 'persist-credentials: false' "$workflow"
 grep -Fq 'Scripts/render-homebrew-cask.sh' "$workflow"
 grep -Fq 'checksums.txt' "$workflow"
-grep -Fq -- '--clobber' "$workflow"
+grep -Fq 'gh release download' "$workflow"
+grep -Fq 'shasum -a 256 -c checksums.txt' "$workflow"
 grep -Fq 'mobilepur/homebrew-tap' "$workflow"
 grep -Fq 'HOMEBREW_TAP_GITHUB_TOKEN' "$workflow"
+if grep -Fq -- '--clobber' "$workflow"; then
+    echo "Release workflow mutates assets already published for a tag" >&2
+    exit 1
+fi
 
 publish_line="$(grep -nF 'name: Publish release package' "$workflow" | cut -d: -f1)"
 tap_checkout_line="$(grep -nF 'repository: mobilepur/homebrew-tap' "$workflow" | cut -d: -f1)"

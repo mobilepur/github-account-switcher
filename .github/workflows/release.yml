@@ -42,22 +42,29 @@ jobs:
       - name: Build release package
         run: bash Scripts/build-release.sh dist
 
-      - name: Prepare checksum and Homebrew Cask
+      - name: Prepare checksum
         run: |
           (cd dist && shasum -a 256 GitHub-Account-Switcher.tar.gz > checksums.txt)
-          checksum="$(awk '{print $1}' dist/checksums.txt)"
-          version="${GITHUB_REF_NAME#v}"
-          bash Scripts/render-homebrew-cask.sh "$version" "$checksum" > dist/github-account-switcher.rb
 
-      - name: Publish release package
+      - name: Publish release package and prepare Homebrew Cask
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz dist/checksums.txt --clobber
+            published_release="$RUNNER_TEMP/published-release"
+            mkdir "$published_release"
+            gh release download "$GITHUB_REF_NAME" \
+              --pattern GitHub-Account-Switcher.tar.gz \
+              --pattern checksums.txt \
+              --dir "$published_release"
+            (cd "$published_release" && shasum -a 256 -c checksums.txt)
+            checksum="$(awk '{print $1}' "$published_release/checksums.txt")"
           else
             gh release create "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz dist/checksums.txt --generate-notes --title "GitHub Account Switcher $GITHUB_REF_NAME"
+            checksum="$(awk '{print $1}' dist/checksums.txt)"
           fi
+          version="${GITHUB_REF_NAME#v}"
+          bash Scripts/render-homebrew-cask.sh "$version" "$checksum" > dist/github-account-switcher.rb
 
       - uses: actions/checkout@v6
         with:
