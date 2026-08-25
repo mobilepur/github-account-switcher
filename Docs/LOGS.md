@@ -10,6 +10,13 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Restore README app icon
+
+- Summary: Restore the centered GitHub Account Switcher app icon below the
+  README title so the project branding is visible again.
+- Verification: Confirmed the README image target resolves to the valid 1024 ×
+  1024 PNG asset and `git diff --check` passed.
+
 ## 2026-08-25 — Refine About links and prepare 0.1.6
 
 - Summary: Style the About version link in muted gray with a right chevron,

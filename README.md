@@ -1,5 +1,9 @@
 # GitHub Account Switcher
 
+<p align="center">
+  <img src="App/AppIcon.png" alt="GitHub Account Switcher app icon" width="192">
+</p>
+
 GitHub Account Switcher is a macOS menu bar app for changing the active account
 in [GitHub CLI](https://cli.github.com/). When an account is selected, the app
 also updates a managed SSH configuration to reference the key path assigned to
