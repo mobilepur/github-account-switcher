@@ -10,6 +10,13 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Refine README tone and SSH key wording
+
+- Summary: Make the README introduction and behavior description more neutral,
+  and clarify that the app stores SSH key paths without reading or modifying
+  the key files.
+- Verification: 26 Swift tests and `git diff --check` passed.
+
 ## 2026-08-25 — Prepare Homebrew Cask distribution
 
 - Summary: Add Cask release packaging, signing and notarization automation,
