@@ -13,11 +13,16 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Verify tag version
+      - name: Verify tag version and main ancestry
         run: |
           app_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' App/Info.plist)"
           test "$GITHUB_REF_NAME" = "v$app_version"
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
 
       - name: Test
         run: swift test
@@ -25,59 +30,49 @@ jobs:
       - name: Test release package
         run: bash Tests/PackagingTests/ReleasePackageTests.sh
 
-      - name: Validate signing secrets
+      - name: Validate Homebrew tap token
         env:
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
         run: |
-          for variable in APPLE_APP_SPECIFIC_PASSWORD APPLE_ID APPLE_TEAM_ID BUILD_CERTIFICATE_BASE64 DEVELOPER_ID_APPLICATION P12_PASSWORD; do
-            if [[ -z "${!variable}" ]]; then
-              echo "::error::Missing GitHub secret: $variable"
-              exit 1
-            fi
-          done
-
-      - name: Install signing certificate
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-        run: |
-          certificate_path="$RUNNER_TEMP/build_certificate.p12"
-          keychain_path="$RUNNER_TEMP/app-signing.keychain-db"
-          keychain_password="$(openssl rand -hex 32)"
-
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$certificate_path"
-          security create-keychain -p "$keychain_password" "$keychain_path"
-          security set-keychain-settings -lut 21600 "$keychain_path"
-          security unlock-keychain -p "$keychain_password" "$keychain_path"
-          security import "$certificate_path" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$keychain_path"
-          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain_path"
-          security list-keychain -d user -s "$keychain_path"
+          if [[ -z "$HOMEBREW_TAP_GITHUB_TOKEN" ]]; then
+            echo "::error::Missing GitHub secret: HOMEBREW_TAP_GITHUB_TOKEN"
+            exit 1
+          fi
 
       - name: Build release package
-        env:
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CODESIGN_IDENTITY: ${{ secrets.DEVELOPER_ID_APPLICATION }}
         run: bash Scripts/build-release.sh dist
+
+      - name: Prepare checksum and Homebrew Cask
+        run: |
+          (cd dist && shasum -a 256 GitHub-Account-Switcher.tar.gz > checksums.txt)
+          checksum="$(awk '{print $1}' dist/checksums.txt)"
+          version="${GITHUB_REF_NAME#v}"
+          bash Scripts/render-homebrew-cask.sh "$version" "$checksum" > dist/github-account-switcher.rb
 
       - name: Publish release package
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz
+            gh release upload "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz dist/checksums.txt --clobber
           else
-            gh release create "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz --generate-notes --title "GitHub Account Switcher $GITHUB_REF_NAME"
+            gh release create "$GITHUB_REF_NAME" dist/GitHub-Account-Switcher.tar.gz dist/checksums.txt --generate-notes --title "GitHub Account Switcher $GITHUB_REF_NAME"
           fi
 
-      - name: Remove signing certificate
-        if: ${{ always() }}
+      - uses: actions/checkout@v6
+        with:
+          repository: mobilepur/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update Homebrew tap
         run: |
-          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
-          rm -f "$RUNNER_TEMP/build_certificate.p12"
+          install -m 644 dist/github-account-switcher.rb homebrew-tap/Casks/github-account-switcher.rb
+          git -C homebrew-tap config user.name "github-actions[bot]"
+          git -C homebrew-tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C homebrew-tap add Casks/github-account-switcher.rb
+          if git -C homebrew-tap diff --cached --quiet; then
+            exit 0
+          fi
+          git -C homebrew-tap commit -m "Brew cask update for github-account-switcher version $GITHUB_REF_NAME"
+          git -C homebrew-tap push origin HEAD:main

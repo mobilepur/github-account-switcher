@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Match xlocal Homebrew release flow
+
+- Summary: Replace Developer ID signing and notarization with the xlocal-style
+  Homebrew flow: ad-hoc signed universal artifacts, pinned checksums, and an
+  automatically generated Cask in `mobilepur/homebrew-tap`.
+- Verification: 26 Swift tests, release packaging and Cask generation tests,
+  release workflow contract checks, shell and Ruby syntax, Homebrew style,
+  property-list validation, and `git diff --check` passed.
+
 ## 2026-08-25 — Prepare 0.1.4 release
 
 - Summary: Bump the app, CLI, and Homebrew version contract to 0.1.4 and move

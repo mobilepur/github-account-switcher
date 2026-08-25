@@ -13,8 +13,7 @@ selected key and an optional account alias.
 Install the app with Homebrew:
 
 ```sh
-brew tap mobilepur/gh-switcher https://github.com/mobilepur/github-account-switcher
-brew install --cask mobilepur/gh-switcher/github-account-switcher
+brew install --cask mobilepur/tap/github-account-switcher
 ```
 
 Open **GitHub Account Switcher** from Applications, Spotlight, or Launchpad. The
@@ -23,11 +22,11 @@ app then stays available in the menu bar. The Cask also installs the
 
 ### Update
 
-Upgrade to the latest commit with:
+Upgrade to the latest release with:
 
 ```sh
 brew update
-brew upgrade --cask --greedy github-account-switcher
+brew upgrade --cask github-account-switcher
 ```
 
 ### Uninstall
@@ -36,7 +35,14 @@ Uninstall the app and CLI with:
 
 ```sh
 brew uninstall --cask github-account-switcher
+```
+
+If you installed the earlier repository-backed Cask, migrate once with:
+
+```sh
+brew uninstall --cask github-account-switcher
 brew untap mobilepur/gh-switcher
+brew install --cask mobilepur/tap/github-account-switcher
 ```
 
 If you installed an earlier version with the `--HEAD` Formula, migrate once
@@ -44,7 +50,7 @@ with:
 
 ```sh
 brew uninstall gh-switcher
-brew install --cask mobilepur/gh-switcher/github-account-switcher
+brew install --cask mobilepur/tap/github-account-switcher
 ```
 
 ## Behavior
@@ -115,8 +121,9 @@ swift run gh-switcher-menubar
 swift test
 ```
 
-`Scripts/build-release.sh` builds both release executables, assembles and signs
-the `.app` bundle, and creates the archive consumed by the Homebrew Cask.
+`Scripts/build-release.sh` builds both release executables, assembles and
+ad-hoc signs the `.app` bundle, and creates the archive consumed by the
+versioned Homebrew Cask in `mobilepur/homebrew-tap`.
 
 ## License
 

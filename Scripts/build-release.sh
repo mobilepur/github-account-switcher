@@ -10,7 +10,6 @@ trap 'rm -rf "$temporary_directory"' EXIT
 staging_directory="$temporary_directory/package"
 arm64_scratch="$temporary_directory/build-arm64"
 x86_64_scratch="$temporary_directory/build-x86_64"
-signing_identity="${CODESIGN_IDENTITY:--}"
 
 if [[ -e "$archive" ]]; then
     echo "Release archive already exists: $archive" >&2
@@ -44,29 +43,8 @@ lipo -create \
     -output "$staging_directory/gh-switcher"
 chmod 755 "$app/Contents/MacOS/gh-switcher-menubar" "$staging_directory/gh-switcher"
 
-if [[ "$signing_identity" = "-" ]]; then
-    codesign --force --options runtime --sign - --identifier com.mobilepur.github-account-switcher.cli "$staging_directory/gh-switcher"
-    codesign --force --options runtime --sign - "$app"
-else
-    : "${APPLE_ID:?APPLE_ID is required for notarized release builds}"
-    : "${APPLE_TEAM_ID:?APPLE_TEAM_ID is required for notarized release builds}"
-    : "${APPLE_APP_SPECIFIC_PASSWORD:?APPLE_APP_SPECIFIC_PASSWORD is required for notarized release builds}"
-
-    codesign --force --options runtime --timestamp --sign "$signing_identity" --identifier com.mobilepur.github-account-switcher.cli "$staging_directory/gh-switcher"
-    codesign --force --options runtime --timestamp --sign "$signing_identity" "$app"
-
-    notarization_archive="$temporary_directory/GitHub-Account-Switcher-notarization.zip"
-    ditto -c -k --sequesterRsrc "$staging_directory" "$notarization_archive"
-    xcrun notarytool submit "$notarization_archive" \
-        --apple-id "$APPLE_ID" \
-        --team-id "$APPLE_TEAM_ID" \
-        --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-        --wait
-    xcrun stapler staple "$app"
-    xcrun stapler validate "$app"
-    spctl --assess --type execute --verbose=2 "$app"
-    spctl --assess --type execute --verbose=2 "$staging_directory/gh-switcher"
-fi
+codesign --force --options runtime --sign - --identifier com.mobilepur.github-account-switcher.cli "$staging_directory/gh-switcher"
+codesign --force --options runtime --sign - "$app"
 
 codesign --verify --strict "$staging_directory/gh-switcher"
 codesign --verify --deep --strict "$app"

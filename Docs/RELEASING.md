@@ -1,23 +1,28 @@
 # Releasing
 
 Pushing a version tag runs `.github/workflows/release.yml`. The workflow tests
-the project, builds universal Apple Silicon and Intel binaries, signs them with
-Developer ID, notarizes the package with Apple, and uploads the release archive
-to GitHub.
+the project, builds and ad-hoc signs universal Apple Silicon and Intel binaries,
+publishes the archive and its checksum to GitHub, and updates the versioned Cask
+in `mobilepur/homebrew-tap`.
 
-## Required GitHub Actions secrets
+The tag must match `App/Info.plist` and point to a commit already reachable from
+`main`.
 
-- `BUILD_CERTIFICATE_BASE64`: Base64-encoded Developer ID Application `.p12`
-  certificate.
-- `P12_PASSWORD`: Password used when exporting the certificate.
-- `DEVELOPER_ID_APPLICATION`: Complete Developer ID Application identity used
-  by `codesign`.
-- `APPLE_ID`: Apple ID used for notarization.
-- `APPLE_TEAM_ID`: Apple Developer team ID.
-- `APPLE_APP_SPECIFIC_PASSWORD`: App-specific password for `notarytool`.
+## Required GitHub Actions secret
 
-The workflow stops before publishing if any signing secret is missing or if
-Apple rejects notarization.
+- `HOMEBREW_TAP_GITHUB_TOKEN`: Fine-grained personal access token restricted to
+  the `mobilepur/homebrew-tap` repository with only **Contents: Read and write**.
+
+Use an expiration date and rotate the token when it expires. Do not reuse a
+broad personal or GitHub CLI token. GitHub supplies the separate `GITHUB_TOKEN`
+used to publish the release in this repository.
+
+## Distribution security
+
+The generated Cask pins a version-specific GitHub Release URL and the archive's
+SHA256. Like `xlocal`, the binaries are not Developer ID-signed or notarized;
+the Cask removes the quarantine attribute after Homebrew verifies the pinned
+archive checksum.
 
 ## Release steps
 
@@ -25,5 +30,14 @@ Apple rejects notarization.
 2. Move the relevant entries in `Docs/RELEASE_NOTES.md` from **Unreleased** to
    the new version.
 3. Run `swift test` and `bash Tests/PackagingTests/ReleasePackageTests.sh`.
-4. Create and push a matching tag such as `v0.1.3`.
-5. Verify that the GitHub release contains `GitHub-Account-Switcher.tar.gz`.
+4. Merge the release commit into `main`.
+5. Create and push a matching tag such as `v0.1.4` from that `main` commit.
+6. Verify that the GitHub release contains `GitHub-Account-Switcher.tar.gz` and
+   `checksums.txt`.
+7. Verify that `mobilepur/homebrew-tap` contains a Cask with the same version
+   and archive checksum.
+8. Run `brew upgrade --cask github-account-switcher` or perform a fresh Cask
+   installation.
+
+Re-running the workflow for the same tag replaces both release assets and then
+updates the Cask to the resulting checksum.

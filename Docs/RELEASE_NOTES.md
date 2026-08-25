@@ -8,8 +8,8 @@
 
 - GitHub Account Switcher can be installed as a Homebrew Cask so the app is
   available from Applications, Spotlight, and Launchpad.
-- Release tags now build, Developer ID-sign, notarize, and publish a universal
-  app bundle together with the `gh-switcher` command-line tool.
+- Release tags now publish an ad-hoc signed universal app bundle and CLI with a
+  pinned checksum, then update the versioned Cask in `mobilepur/homebrew-tap`.
 - The README now explains menu bar account switching, installation, and how the
   app handles SSH keys and GitHub credentials.
 
