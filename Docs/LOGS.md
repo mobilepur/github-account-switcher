@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-25 — Prepare 0.1.4 release
+
+- Summary: Bump the app, CLI, and Homebrew version contract to 0.1.4 and move
+  the completed Cask, release automation, and README changes into the 0.1.4
+  release notes.
+- Verification: Focused CLI version test, full Swift test suite, release
+  packaging test, property-list validation, version consistency check, and
+  `git diff --check` passed.
+
 ## 2026-08-25 — Refine README tone and SSH key wording
 
 - Summary: Make the README introduction and behavior description more neutral,

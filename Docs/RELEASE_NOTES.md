@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.4 — 2026-08-25
+
 ### Changed
 
 - GitHub Account Switcher can be installed as a Homebrew Cask so the app is
