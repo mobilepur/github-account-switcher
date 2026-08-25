@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.1.5 — 2026-08-25
+
+### Added
+
+- The menu bar panel now has an About section showing the app name and version,
+  with links to the matching GitHub release notes and the GitHub issue form.
+
 ## 0.1.4 — 2026-08-25
 
 ### Changed

@@ -164,15 +164,31 @@ struct MainPanelView: View {
             Toggle("Start at Login", isOn: startAtLoginBinding)
                 .disabled(loginItemManager.status == .unavailable)
             Toggle("Use GitHub Avatars", isOn: $useGitHubAvatars)
-            Link(destination: AppLinks.newIssue) {
-                Label("Report a Problem…", systemImage: "exclamationmark.bubble")
-            }
-            .buttonStyle(.plain)
             if let loginItemError {
                 Text(loginItemError)
                     .font(.caption)
                     .foregroundStyle(.red)
             }
+            Divider()
+            Text("About")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack {
+                Text("GitHub Account Switcher")
+                Spacer()
+                Link(destination: AppLinks.releaseNotes(version: appVersion)) {
+                    HStack(spacing: 4) {
+                        Text(appVersion)
+                        Image(systemName: "arrow.up.right.square")
+                    }
+                }
+                .help("View GitHub release notes for version \(appVersion)")
+                .accessibilityLabel("Version \(appVersion), GitHub Release Notes")
+            }
+            Link(destination: AppLinks.newIssue) {
+                Label("Report a Problem…", systemImage: "exclamationmark.bubble")
+            }
+            .buttonStyle(.plain)
             Spacer(minLength: 8)
             Divider()
             Button("Quit") {
@@ -181,10 +197,14 @@ struct MainPanelView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .frame(width: 240, height: 324)
+        .frame(width: 240, height: 368)
         .onAppear {
             startsAtLogin = loginItemManager.isEnabled
         }
+    }
+
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
     }
 
     private var accountListHeight: CGFloat {
