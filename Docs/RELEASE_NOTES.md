@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.1.8 — 2026-08-26
+
+### Fixed
+
+- Release builds now compile on the macOS 15 GitHub Actions runner by keeping
+  AppKit avatar images on the main actor.
+
 ## 0.1.7 — 2026-08-26
 
 ### Fixed
