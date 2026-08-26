@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-26 — Fix avatar isolation and prepare 0.1.8
+
+- Summary: Keep AppKit avatar images on the main actor so release builds remain
+  compatible with Xcode 16.4, and bump the app and CLI to 0.1.8 for the
+  immutable replacement release.
+- Verification: Captured the original GitHub Actions compile failure, observed
+  the focused 0.1.8 CLI version test fail before the version update, then passed
+  30 Swift tests, the universal release packaging test, the release workflow
+  contract, property-list validation, and `git diff --check`.
+
 ## 2026-08-26 — Prepare 0.1.7 release
 
 - Summary: Bump the app and CLI to 0.1.7 and move the login-start avatar fix

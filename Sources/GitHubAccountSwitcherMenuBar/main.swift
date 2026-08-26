@@ -54,7 +54,7 @@ final class ActiveAvatarState {
     private(set) var image: NSImage?
     private var loadingLogin: String?
 
-    func load(for login: String?, operation: () async -> NSImage?) async {
+    func load(for login: String?, operation: @MainActor () async -> NSImage?) async {
         guard !Task.isCancelled else { return }
         beginLoading(for: login)
         let image = await operation()
@@ -82,6 +82,7 @@ enum AvatarLoader {
         return configuration
     }
 
+    @MainActor
     static func load(for account: GitHubAccount?) async -> NSImage? {
         guard let url = account?.avatarURL else { return nil }
         guard let (data, response) = try? await session.data(from: url),
