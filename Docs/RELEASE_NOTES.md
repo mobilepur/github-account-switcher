@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.1.9 — 2026-08-26
+
+### Changed
+
+- The menu bar icon now shows wider black horizontal switching arrows with
+  full-length shafts, detached open arrowheads, and rounded tails behind a
+  rounded black badge containing the active account avatar or white initials.
+
 ## 0.1.8 — 2026-08-26
 
 ### Fixed

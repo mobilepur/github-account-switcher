@@ -92,27 +92,51 @@ enum AvatarLoader {
 }
 
 enum MenuBarIconRenderer {
-    static let shaftMinX: CGFloat = 9
-    static let shaftMaxX: CGFloat = 23
     static let avatarRect = NSRect(x: 9, y: 3, width: 14, height: 14)
+    private static let badgeRect = NSRect(x: 7, y: 1, width: 18, height: 18)
 
     static func image(for abbreviation: String, avatar: NSImage?) -> NSImage {
         let size = NSSize(width: 32, height: 20)
         let image = NSImage(size: size, flipped: false) { rect in
-            let arrow = NSBezierPath()
-            arrow.move(to: NSPoint(x: 0, y: rect.midY))
-            arrow.line(to: NSPoint(x: shaftMinX, y: 20))
-            arrow.line(to: NSPoint(x: shaftMinX, y: 18))
-            arrow.line(to: NSPoint(x: shaftMaxX, y: 18))
-            arrow.line(to: NSPoint(x: shaftMaxX, y: 20))
-            arrow.line(to: NSPoint(x: 32, y: rect.midY))
-            arrow.line(to: NSPoint(x: shaftMaxX, y: 0))
-            arrow.line(to: NSPoint(x: shaftMaxX, y: 2))
-            arrow.line(to: NSPoint(x: shaftMinX, y: 2))
-            arrow.line(to: NSPoint(x: shaftMinX, y: 0))
-            arrow.close()
-            NSColor.labelColor.setFill()
-            arrow.fill()
+            let topShaft = NSBezierPath()
+            topShaft.move(to: NSPoint(x: 2, y: 13))
+            topShaft.line(to: NSPoint(x: 31, y: 13))
+            topShaft.lineWidth = 2
+            topShaft.lineCapStyle = .round
+
+            let topArrowhead = NSBezierPath()
+            topArrowhead.move(to: NSPoint(x: 27, y: 9))
+            topArrowhead.line(to: NSPoint(x: 31, y: 13))
+            topArrowhead.line(to: NSPoint(x: 27, y: 17))
+            topArrowhead.lineWidth = 2
+            topArrowhead.lineCapStyle = .round
+            topArrowhead.lineJoinStyle = .round
+
+            let bottomShaft = NSBezierPath()
+            bottomShaft.move(to: NSPoint(x: 1, y: 7))
+            bottomShaft.line(to: NSPoint(x: 30, y: 7))
+            bottomShaft.lineWidth = 2
+            bottomShaft.lineCapStyle = .round
+
+            let bottomArrowhead = NSBezierPath()
+            bottomArrowhead.move(to: NSPoint(x: 5, y: 3))
+            bottomArrowhead.line(to: NSPoint(x: 1, y: 7))
+            bottomArrowhead.line(to: NSPoint(x: 5, y: 11))
+            bottomArrowhead.lineWidth = 2
+            bottomArrowhead.lineCapStyle = .round
+            bottomArrowhead.lineJoinStyle = .round
+
+            NSColor.black.setStroke()
+            topShaft.stroke()
+            topArrowhead.stroke()
+            bottomShaft.stroke()
+            bottomArrowhead.stroke()
+            NSColor.black.setFill()
+            NSBezierPath(
+                roundedRect: badgeRect,
+                xRadius: 5,
+                yRadius: 5
+            ).fill()
 
             if let avatar {
                 NSGraphicsContext.saveGraphicsState()
@@ -122,11 +146,10 @@ enum MenuBarIconRenderer {
             } else {
                 let attributes: [NSAttributedString.Key: Any] = [
                     .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                    .foregroundColor: NSColor.black,
+                    .foregroundColor: NSColor.white,
                 ]
                 let text = abbreviation as NSString
                 let textSize = text.size(withAttributes: attributes)
-                NSGraphicsContext.current?.compositingOperation = .destinationOut
                 text.draw(
                     at: NSPoint(
                         x: (rect.width - textSize.width) / 2,
@@ -134,11 +157,10 @@ enum MenuBarIconRenderer {
                     ),
                     withAttributes: attributes
                 )
-                NSGraphicsContext.current?.compositingOperation = .sourceOver
             }
             return true
         }
-        image.isTemplate = avatar == nil
+        image.isTemplate = false
         return image
     }
 }
