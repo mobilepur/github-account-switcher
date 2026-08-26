@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-26 — Prepare 0.1.7 release
+
+- Summary: Bump the app and CLI to 0.1.7 and move the login-start avatar fix
+  into the 0.1.7 release notes.
+- Verification: Observed the focused CLI version test fail before the version
+  update, then passed 30 Swift tests, the universal release packaging test,
+  property-list validation, `git diff --check`, and an independent release
+  review with no blocking findings.
+
 ## 2026-08-26 — Wait for connectivity when loading avatars
 
 - Summary: Keep the menu bar avatar request pending while the app waits for
