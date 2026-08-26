@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-26 — Wait for connectivity when loading avatars
+
+- Summary: Keep the menu bar avatar request pending while the app waits for
+  network connectivity after login, and prevent stale or cancelled account
+  requests from clearing or replacing the current avatar.
+- Verification: Observed focused tests fail before the connectivity, stale-state,
+  and cancellation changes; then passed 30 Swift tests, `git diff --check`, and
+  an independent read-only change review with no remaining findings.
+
 ## 2026-08-25 — Restore README app icon
 
 - Summary: Restore the centered GitHub Account Switcher app icon below the

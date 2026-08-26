@@ -8,7 +8,7 @@ struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openSettings) private var openSettings
     @State private var model = MenuBarModel()
-    @State private var activeAvatar: NSImage?
+    @State private var activeAvatar = ActiveAvatarState()
     @AppStorage("useGitHubAvatars") private var useGitHubAvatars = true
 
     var body: some Scene {
@@ -27,13 +27,16 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 }
             }
         } label: {
+            let account = model.activeAccount
             Image(nsImage: MenuBarIconRenderer.image(
-                for: model.activeAccount?.menuBarAbbreviation ?? "--",
-                avatar: useGitHubAvatars ? activeAvatar : nil
+                for: account?.menuBarAbbreviation ?? "--",
+                avatar: useGitHubAvatars ? activeAvatar.image : nil
             ))
-            .accessibilityLabel(model.activeAccount.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
-            .task(id: model.activeAccount?.login) {
-                activeAvatar = await loadAvatar(for: model.activeAccount)
+            .accessibilityLabel(account.map { "Active GitHub account: \($0.displayName)" } ?? "No active GitHub account")
+            .task(id: account?.login) {
+                await activeAvatar.load(for: account?.login) {
+                    await AvatarLoader.load(for: account)
+                }
             }
         }
         .menuBarExtraStyle(.window)
@@ -43,10 +46,45 @@ struct GitHubAccountSwitcherMenuBarApp: App {
         }
         .windowResizability(.contentSize)
     }
+}
 
-    private func loadAvatar(for account: GitHubAccount?) async -> NSImage? {
+@MainActor
+@Observable
+final class ActiveAvatarState {
+    private(set) var image: NSImage?
+    private var loadingLogin: String?
+
+    func load(for login: String?, operation: () async -> NSImage?) async {
+        guard !Task.isCancelled else { return }
+        beginLoading(for: login)
+        let image = await operation()
+        guard !Task.isCancelled else { return }
+        finishLoading(image, for: login)
+    }
+
+    func beginLoading(for login: String?) {
+        loadingLogin = login
+        image = nil
+    }
+
+    func finishLoading(_ image: NSImage?, for login: String?) {
+        guard loadingLogin == login else { return }
+        self.image = image
+    }
+}
+
+enum AvatarLoader {
+    private static let session = URLSession(configuration: sessionConfiguration())
+
+    static func sessionConfiguration() -> URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.default
+        configuration.waitsForConnectivity = true
+        return configuration
+    }
+
+    static func load(for account: GitHubAccount?) async -> NSImage? {
         guard let url = account?.avatarURL else { return nil }
-        guard let (data, response) = try? await URLSession.shared.data(from: url),
+        guard let (data, response) = try? await session.data(from: url),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return NSImage(data: data)
     }
