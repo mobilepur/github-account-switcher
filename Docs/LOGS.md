@@ -10,6 +10,17 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-26 — Redesign menu bar account icon and prepare 0.1.9
+
+- Summary: Replace the filled menu bar switch mark with wider black horizontal
+  arrows, detached open arrowheads, and a rounded black account badge for both
+  avatars and white initials; bump the app and CLI to 0.1.9.
+- Verification: Observed the focused raster and 0.1.9 CLI version tests fail
+  before implementation, then passed 31 Swift tests, the universal release
+  packaging test, property-list and version validation, a live menu bar visual
+  check, `git diff --check`, and an automated read-only change review with no
+  findings.
+
 ## 2026-08-26 — Fix avatar isolation and prepare 0.1.8
 
 - Summary: Keep AppKit avatar images on the main actor so release builds remain
