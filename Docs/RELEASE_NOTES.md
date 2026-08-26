@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- The active account avatar now waits for network connectivity when the app
+  starts automatically at login.
+
 ## 0.1.6 — 2026-08-25
 
 ### Changed
