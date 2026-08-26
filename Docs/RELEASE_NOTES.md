@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.7 — 2026-08-26
+
 ### Fixed
 
 - The active account avatar now waits for network connectivity when the app
