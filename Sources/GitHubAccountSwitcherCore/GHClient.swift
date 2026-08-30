@@ -11,6 +11,17 @@ struct GHAccount: Decodable {
     let login: String
 }
 
+struct GitIdentity: Equatable, Sendable {
+    let name: String
+    let email: String
+}
+
+private struct GHUser: Decodable {
+    let id: Int
+    let login: String
+    let name: String?
+}
+
 struct GHClient {
     let run: ([String]) -> CommandOutput
 
@@ -32,6 +43,20 @@ struct GHClient {
         guard output.exitCode == 0 else {
             throw GHClientError.message(output.message)
         }
+    }
+
+    func gitIdentity() throws -> GitIdentity {
+        let output = run(["api", "--hostname", "github.com", "user"])
+        guard output.exitCode == 0 else {
+            throw GHClientError.message(output.message)
+        }
+
+        let user = try JSONDecoder().decode(GHUser.self, from: Data(output.standardOutput.utf8))
+        let profileName = user.name?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return GitIdentity(
+            name: profileName.flatMap { $0.isEmpty ? nil : $0 } ?? user.login,
+            email: "\(user.id)+\(user.login)@users.noreply.github.com"
+        )
     }
 
     func authenticateAccount() throws {

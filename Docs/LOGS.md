@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Release 1.0.0 with Git identity switching
+
+- Summary: Update the global Git author and committer identity alongside the
+  selected GitHub CLI account and SSH key, using GitHub's private noreply
+  address and rolling all managed state back after failures; prepare version
+  1.0.0 for release.
+- Verification: Passed 50 Swift tests, the universal release packaging test,
+  an independent read-only change review, and `git diff --check`.
+
 ## 2026-08-30 — Keep GitHub account setup in Settings
 
 - Summary: Keep the device sign-in instructions visible, return successful

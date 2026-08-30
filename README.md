@@ -7,7 +7,7 @@
 GitHub Account Switcher is a macOS menu bar app for changing the active account
 in [GitHub CLI](https://cli.github.com/). When an account is selected, the app
 also updates a managed SSH configuration to reference the key path assigned to
-that account.
+that account and updates the global Git commit identity for future commits.
 
 The app does not read or modify SSH key files. It stores only the path to the
 selected key and an optional account alias.
@@ -62,9 +62,12 @@ brew install --cask mobilepur/tap/github-account-switcher
 - Lists GitHub accounts already authenticated in `gh`.
 - Switches the active account with `gh auth switch`.
 - Updates a separate, managed SSH configuration with the selected key path.
+- Updates the global Git author name and email from the selected GitHub profile,
+  using GitHub's private `noreply` email address.
 - Leaves existing SSH host entries in place.
 - Can display GitHub avatars and start automatically at login.
-- Restores the previous managed SSH configuration if account switching fails.
+- Restores the previous GitHub CLI account, managed SSH configuration, and Git
+  identity if account switching fails.
 
 ## Set up accounts
 
@@ -77,7 +80,12 @@ gh auth login
 Then open the menu bar app, choose **Configure Accounts**, and select the
 existing private SSH key file for each account. The app records the file path,
 not the key itself. Once configured, select an account in the menu bar to switch
-both GitHub CLI and SSH.
+GitHub CLI, SSH, and the global Git identity together.
+
+Repository-local `user.name` or `user.email` settings take precedence over the
+global identity. Remove or update those local settings if a repository should
+follow the account selected in GitHub Account Switcher. Existing commits are
+not changed.
 
 You can also configure accounts with the command-line tool. The optional alias
 is used as the short label in the menu bar.
@@ -104,7 +112,10 @@ existing location and is read by SSH as usual.
 
 The app also does not store GitHub passwords, tokens, or other credentials.
 Authentication remains managed by GitHub CLI; the app uses `gh auth status` and
-`gh auth switch` to read and change the active account.
+`gh auth switch` to read and change the active account. It reads the selected
+account's public GitHub profile through `gh api --hostname github.com user` and
+writes only the profile name (or login) and GitHub-provided `noreply` address to
+the global Git config.
 
 ## Command-line usage
 
