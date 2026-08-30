@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- The menu bar icon is now slightly more compact, keeps the active GitHub
+  avatar visible, centers its 10-point initials on whole pixels, uses 90%
+  opacity for the base mark, and adapts to the light and dark menu bar colors
+  used on different displays.
+
 ## 0.1.9 — 2026-08-26
 
 ### Changed
