@@ -10,6 +10,12 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record mobilepur push smoke-test commit
+
+- Summary: Add a disposable local commit after activating mobilepur in GitHub
+  Account Switcher, ready for a separate push test.
+- Verification: `git diff --check`.
+
 ## 2026-08-30 — Record account-switching smoke-test commit
 
 - Summary: Add a second disposable commit to the unmerged smoke-test pull
