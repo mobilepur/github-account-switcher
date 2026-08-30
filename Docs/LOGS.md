@@ -10,6 +10,14 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Make GitHub account sign-in recoverable
+
+- Summary: Open GitHub's device sign-in page from Account Settings, copy the
+  one-time code to the clipboard, and use the compact progress indicator while
+  authentication is pending.
+- Verification: Observed the device-sign-in link test fail before the change,
+  then passed focused authentication tests and 35 Swift tests.
+
 ## 2026-08-30 — Add GitHub account authentication from Settings
 
 - Summary: Add a bottom-left Add Account button that launches the GitHub CLI

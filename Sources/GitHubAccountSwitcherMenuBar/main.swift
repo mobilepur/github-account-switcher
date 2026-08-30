@@ -341,6 +341,7 @@ final class MenuBarModel {
 
         isAddingAccount = true
         error = nil
+        NSWorkspace.shared.open(AppLinks.deviceSignIn)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let result = Result { try AccountService.authenticateAccount() }
             DispatchQueue.main.async {
@@ -450,8 +451,8 @@ struct SettingsView: View {
                 } label: {
                     if model.isAddingAccount {
                         HStack {
-                            ProgressView()
-                            Text("Waiting for GitHub sign-in…")
+                            ProgressView().controlSize(.small)
+                            Text("Continue sign-in in your browser…")
                         }
                     } else {
                         Text("Add Account…")

@@ -36,7 +36,7 @@ struct GHClient {
 
     func authenticateAccount() throws {
         let output = run([
-            "auth", "login", "--hostname", "github.com", "--web", "--skip-ssh-key",
+            "auth", "login", "--hostname", "github.com", "--web", "--clipboard", "--skip-ssh-key",
         ])
         guard output.exitCode == 0 else {
             throw GHClientError.message(output.message)

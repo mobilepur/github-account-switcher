@@ -15,4 +15,9 @@ struct AppLinksTests {
     func reportProblemOpensNewIssue() {
         #expect(AppLinks.newIssue.absoluteString == "https://github.com/mobilepur/github-account-switcher/issues/new")
     }
+
+    @Test("Account authentication opens the GitHub device sign-in page")
+    func accountAuthenticationOpensDeviceSignIn() {
+        #expect(AppLinks.deviceSignIn.absoluteString == "https://github.com/login/device")
+    }
 }

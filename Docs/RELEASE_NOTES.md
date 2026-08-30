@@ -4,8 +4,9 @@
 
 ### Added
 
-- Account Settings can now add an existing GitHub account through the GitHub
-  CLI browser sign-in flow before linking its existing private SSH key.
+- Account Settings can now add an existing GitHub account through GitHub's
+  device sign-in page, with its one-time code copied to the clipboard before
+  linking an existing private SSH key.
 
 ### Changed
 

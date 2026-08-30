@@ -92,7 +92,7 @@ struct GHCommandTests {
         try gh.authenticateAccount()
 
         #expect(receivedArguments == [
-            "auth", "login", "--hostname", "github.com", "--web", "--skip-ssh-key",
+            "auth", "login", "--hostname", "github.com", "--web", "--clipboard", "--skip-ssh-key",
         ])
     }
 
