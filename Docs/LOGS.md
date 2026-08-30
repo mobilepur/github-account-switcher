@@ -10,6 +10,12 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record account-switching smoke-test commit
+
+- Summary: Add a second disposable commit to the unmerged smoke-test pull
+  request after switching the active GitHub CLI account.
+- Verification: `git diff --check`.
+
 ## 2026-08-30 — Create account-switching smoke test
 
 - Summary: Add an unmerged pull request with a disposable document for
