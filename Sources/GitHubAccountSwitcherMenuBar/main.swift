@@ -92,8 +92,11 @@ enum AvatarLoader {
 }
 
 enum MenuBarIconRenderer {
-    static let avatarRect = NSRect(x: 7, y: 2, width: 14, height: 14)
-    private static let badgeRect = NSRect(x: 6, y: 1, width: 16, height: 16)
+    static let avatarRect = NSRect(x: 7.5, y: 2.5, width: 13, height: 13)
+    private static let badgeRect = NSRect(x: 6.5, y: 1.5, width: 15, height: 15)
+    static let abbreviationFontSize: CGFloat = 10
+    private static let abbreviationVerticalPixelOffset: CGFloat = -2
+    private static let baseIconOpacity: CGFloat = 0.9
 
     static func image(for abbreviation: String, avatar: NSImage?) -> NSImage {
         let size = NSSize(width: 28, height: 18)
@@ -126,12 +129,13 @@ enum MenuBarIconRenderer {
             bottomArrowhead.lineCapStyle = .round
             bottomArrowhead.lineJoinStyle = .round
 
-            NSColor.labelColor.setStroke()
+            let baseIconColor = NSColor.labelColor.withAlphaComponent(baseIconOpacity)
+            baseIconColor.setStroke()
             topShaft.stroke()
             topArrowhead.stroke()
             bottomShaft.stroke()
             bottomArrowhead.stroke()
-            NSColor.labelColor.setFill()
+            baseIconColor.setFill()
             NSBezierPath(
                 roundedRect: badgeRect,
                 xRadius: 5,
@@ -145,7 +149,7 @@ enum MenuBarIconRenderer {
                 NSGraphicsContext.restoreGraphicsState()
             } else {
                 let attributes: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 9, weight: .bold),
+                    .font: NSFont.systemFont(ofSize: abbreviationFontSize, weight: .bold),
                     .foregroundColor: NSColor.black,
                 ]
                 let text = abbreviation as NSString
@@ -159,6 +163,7 @@ enum MenuBarIconRenderer {
                     at: NSPoint(
                         x: (rect.midX - textBounds.midX).rounded(),
                         y: (rect.midY - textBounds.midY).rounded()
+                            + abbreviationVerticalPixelOffset
                     ),
                     withAttributes: attributes
                 )

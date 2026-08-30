@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Polish menu bar icon geometry
+
+- Summary: Refine the adaptive menu bar icon with a 15-point badge, a
+  13-point avatar, 90% base-mark opacity, and a compact, pixel-aligned
+  10-point account abbreviation.
+- Verification: Observed focused icon tests fail before each geometry change,
+  then passed focused menu bar icon tests, 32 Swift tests, and `git diff
+  --check`.
+
 ## 2026-08-30 — Refine the adaptive menu bar icon
 
 - Summary: Make the menu bar icon more compact while retaining a larger colored

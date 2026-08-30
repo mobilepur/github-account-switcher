@@ -62,8 +62,8 @@ struct MenuBarIconRendererTests {
 
         #expect(image.size == NSSize(width: 28, height: 18))
         #expect(image.isTemplate == false)
-        #expect(MenuBarIconRenderer.avatarRect == NSRect(x: 7, y: 2, width: 14, height: 14))
-        #expect(isOpaque(bitmap.colorAt(x: 2, y: 5)))
+        #expect(MenuBarIconRenderer.avatarRect == NSRect(x: 7.5, y: 2.5, width: 13, height: 13))
+        #expect(hasAlpha(bitmap.colorAt(x: 2, y: 5), approximately: 0.9))
         #expect(isTransparent(bitmap.colorAt(x: 1, y: 8)))
         #expect(isRed(bitmap.colorAt(x: 14, y: 9)))
     }
@@ -73,15 +73,37 @@ struct MenuBarIconRendererTests {
     func accountPrefixAppearance() {
         let image = MenuBarIconRenderer.image(for: "AB", avatar: nil)
         let prefixBitmap = bitmap(for: image)
+        let baseIconBitmap = bitmap(for: MenuBarIconRenderer.image(for: "", avatar: nil))
         let badgePixels = (6..<22).flatMap { x in
             (1..<17).compactMap { y in prefixBitmap.colorAt(x: x, y: y) }
         }
 
         #expect(image.isTemplate)
         #expect(image.size == NSSize(width: 28, height: 18))
-        #expect(isOpaque(prefixBitmap.colorAt(x: 7, y: 4)))
+        #expect(hasAlpha(baseIconBitmap.colorAt(x: 14, y: 9), approximately: 0.9))
         #expect(isTransparent(prefixBitmap.colorAt(x: 6, y: 1)))
         #expect(badgePixels.contains(where: isNotOpaque))
+    }
+
+    @Test("Centers the larger account prefix in the badge")
+    @MainActor
+    func largerAccountPrefixAppearance() throws {
+        let image = MenuBarIconRenderer.image(for: "MO", avatar: nil)
+        let bitmap = bitmap(for: image)
+        let glyphPixels = (8..<20).flatMap { x in
+            (3..<15).compactMap { y -> NSPoint? in
+                guard isTransparent(bitmap.colorAt(x: x, y: y)) else { return nil }
+                return NSPoint(x: x, y: y)
+            }
+        }
+        let minimumY = try #require(glyphPixels.map(\.y).min())
+        let maximumY = try #require(glyphPixels.map(\.y).max())
+        let glyphHeight = maximumY - minimumY + 1
+        let glyphCenterY = (minimumY + maximumY + 1) / 2
+
+        #expect(MenuBarIconRenderer.abbreviationFontSize == 10)
+        #expect(glyphHeight >= 7)
+        #expect(glyphCenterY == 8.5)
     }
 
     @MainActor
@@ -116,7 +138,12 @@ struct MenuBarIconRendererTests {
     }
 
     private func isOpaque(_ color: NSColor?) -> Bool {
-        (color?.alphaComponent ?? 0) > 0.8
+        (color?.alphaComponent ?? 0) >= 0.8
+    }
+
+    private func hasAlpha(_ color: NSColor?, approximately expectedAlpha: CGFloat) -> Bool {
+        guard let color else { return false }
+        return abs(color.alphaComponent - expectedAlpha) < 0.05
     }
 
     private func isAntialiasedBlack(_ color: NSColor?) -> Bool {
