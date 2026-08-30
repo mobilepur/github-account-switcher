@@ -10,6 +10,13 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record mobilepur Git identity smoke test
+
+- Summary: Add another disposable commit after switching back to mobilepur,
+  verifying its private noreply author identity and SSH push authorization.
+- Verification: `git diff --check`, inspection of the resulting author and
+  committer identities, and a direct GitHub SSH authentication check.
+
 ## 2026-08-30 — Record reverse Git identity smoke test
 
 - Summary: Add a disposable commit after switching back to the other configured

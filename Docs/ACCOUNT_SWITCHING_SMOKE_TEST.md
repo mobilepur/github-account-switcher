@@ -12,5 +12,7 @@ This file exists only on the unmerged smoke-test pull request.
    switching attempt.
 5. A second post-implementation commit verifies switching the commit identity
    back to the other configured account.
+6. A third post-implementation commit verifies switching the commit identity
+   to mobilepur again before committing and pushing.
 
 Do not merge this pull request.
