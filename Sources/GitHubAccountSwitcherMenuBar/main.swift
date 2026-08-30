@@ -92,46 +92,46 @@ enum AvatarLoader {
 }
 
 enum MenuBarIconRenderer {
-    static let avatarRect = NSRect(x: 9, y: 3, width: 14, height: 14)
-    private static let badgeRect = NSRect(x: 7, y: 1, width: 18, height: 18)
+    static let avatarRect = NSRect(x: 7, y: 2, width: 14, height: 14)
+    private static let badgeRect = NSRect(x: 6, y: 1, width: 16, height: 16)
 
     static func image(for abbreviation: String, avatar: NSImage?) -> NSImage {
-        let size = NSSize(width: 32, height: 20)
+        let size = NSSize(width: 28, height: 18)
         let image = NSImage(size: size, flipped: false) { rect in
             let topShaft = NSBezierPath()
-            topShaft.move(to: NSPoint(x: 2, y: 13))
-            topShaft.line(to: NSPoint(x: 31, y: 13))
+            topShaft.move(to: NSPoint(x: 2, y: 12))
+            topShaft.line(to: NSPoint(x: 27, y: 12))
             topShaft.lineWidth = 2
             topShaft.lineCapStyle = .round
 
             let topArrowhead = NSBezierPath()
-            topArrowhead.move(to: NSPoint(x: 27, y: 9))
-            topArrowhead.line(to: NSPoint(x: 31, y: 13))
-            topArrowhead.line(to: NSPoint(x: 27, y: 17))
+            topArrowhead.move(to: NSPoint(x: 23, y: 8))
+            topArrowhead.line(to: NSPoint(x: 27, y: 12))
+            topArrowhead.line(to: NSPoint(x: 23, y: 16))
             topArrowhead.lineWidth = 2
             topArrowhead.lineCapStyle = .round
             topArrowhead.lineJoinStyle = .round
 
             let bottomShaft = NSBezierPath()
-            bottomShaft.move(to: NSPoint(x: 1, y: 7))
-            bottomShaft.line(to: NSPoint(x: 30, y: 7))
+            bottomShaft.move(to: NSPoint(x: 1, y: 6))
+            bottomShaft.line(to: NSPoint(x: 26, y: 6))
             bottomShaft.lineWidth = 2
             bottomShaft.lineCapStyle = .round
 
             let bottomArrowhead = NSBezierPath()
-            bottomArrowhead.move(to: NSPoint(x: 5, y: 3))
-            bottomArrowhead.line(to: NSPoint(x: 1, y: 7))
-            bottomArrowhead.line(to: NSPoint(x: 5, y: 11))
+            bottomArrowhead.move(to: NSPoint(x: 5, y: 2))
+            bottomArrowhead.line(to: NSPoint(x: 1, y: 6))
+            bottomArrowhead.line(to: NSPoint(x: 5, y: 10))
             bottomArrowhead.lineWidth = 2
             bottomArrowhead.lineCapStyle = .round
             bottomArrowhead.lineJoinStyle = .round
 
-            NSColor.black.setStroke()
+            NSColor.labelColor.setStroke()
             topShaft.stroke()
             topArrowhead.stroke()
             bottomShaft.stroke()
             bottomArrowhead.stroke()
-            NSColor.black.setFill()
+            NSColor.labelColor.setFill()
             NSBezierPath(
                 roundedRect: badgeRect,
                 xRadius: 5,
@@ -145,22 +145,28 @@ enum MenuBarIconRenderer {
                 NSGraphicsContext.restoreGraphicsState()
             } else {
                 let attributes: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                    .foregroundColor: NSColor.white,
+                    .font: NSFont.systemFont(ofSize: 9, weight: .bold),
+                    .foregroundColor: NSColor.black,
                 ]
                 let text = abbreviation as NSString
-                let textSize = text.size(withAttributes: attributes)
+                let textBounds = text.boundingRect(
+                    with: rect.size,
+                    options: .usesDeviceMetrics,
+                    attributes: attributes
+                )
+                NSGraphicsContext.current?.compositingOperation = .destinationOut
                 text.draw(
                     at: NSPoint(
-                        x: (rect.width - textSize.width) / 2,
-                        y: (rect.height - textSize.height) / 2
+                        x: (rect.midX - textBounds.midX).rounded(),
+                        y: (rect.midY - textBounds.midY).rounded()
                     ),
                     withAttributes: attributes
                 )
+                NSGraphicsContext.current?.compositingOperation = .sourceOver
             }
             return true
         }
-        image.isTemplate = false
+        image.isTemplate = avatar == nil
         return image
     }
 }

@@ -122,8 +122,12 @@ Run `gh-switcher` without arguments to see all available commands.
 ```sh
 swift run gh-switcher
 swift run gh-switcher-menubar
+./run_dev.sh
 swift test
 ```
+
+`run_dev.sh` starts the menu bar app from the worktree containing the script,
+so it always runs that worktree's currently checked-out branch.
 
 `Scripts/build-release.sh` builds both release executables, assembles and
 ad-hoc signs the `.app` bundle, and creates the archive consumed by the

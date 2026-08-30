@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Refine the adaptive menu bar icon
+
+- Summary: Make the menu bar icon more compact while retaining a larger colored
+  GitHub avatar, use adaptive system colors for it, center initial glyphs on
+  whole pixels, and add `run_dev.sh` to start the current worktree's menu bar
+  app.
+- Verification: Observed the focused icon geometry tests fail before the
+  changes; then passed focused menu bar icon tests, 31 Swift tests, shell
+  syntax validation for `run_dev.sh`, and `git diff --check`.
+
 ## 2026-08-26 — Redesign menu bar account icon and prepare 0.1.9
 
 - Summary: Replace the filled menu bar switch mark with wider black horizontal
