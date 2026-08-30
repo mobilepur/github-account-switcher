@@ -8,6 +8,11 @@
   device sign-in page, with its one-time code copied to the clipboard before
   linking an existing private SSH key.
 
+### Fixed
+
+- A pending GitHub device sign-in can now be cancelled directly from Account
+  Settings without closing the window or changing existing accounts.
+
 ### Changed
 
 - The menu bar icon is now slightly more compact, keeps the active GitHub

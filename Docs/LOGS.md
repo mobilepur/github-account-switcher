@@ -10,6 +10,14 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Allow cancelling pending GitHub account sign-in
+
+- Summary: Add a dedicated Cancel sign-in control that terminates only the
+  pending GitHub CLI authentication process and keeps the Settings window open.
+- Verification: Observed the cancellable-authentication test fail before the
+  implementation, then passed 36 Swift tests, the universal release packaging
+  test, and `git diff --check`.
+
 ## 2026-08-30 — Make GitHub account sign-in recoverable
 
 - Summary: Open GitHub's device sign-in page from Account Settings, copy the

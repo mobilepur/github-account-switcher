@@ -77,6 +77,89 @@ struct GHClient {
     }
 }
 
+public final class GHAuthentication: @unchecked Sendable {
+    private let executableURL: URL
+    private let arguments: [String]
+    private let lock = NSLock()
+    private var process: Process?
+    private var cancelled = false
+
+    init(executableURL: URL, arguments: [String]) {
+        self.executableURL = executableURL
+        self.arguments = arguments
+    }
+
+    public static var live: GHAuthentication {
+        let arguments = [
+            "auth", "login", "--hostname", "github.com", "--web", "--clipboard", "--skip-ssh-key",
+        ]
+        let candidates = ["/opt/homebrew/bin/gh", "/usr/local/bin/gh"]
+        if let executable = candidates.first(where: FileManager.default.fileExists(atPath:)) {
+            return GHAuthentication(executableURL: URL(fileURLWithPath: executable), arguments: arguments)
+        }
+        return GHAuthentication(
+            executableURL: URL(fileURLWithPath: "/usr/bin/env"),
+            arguments: ["gh"] + arguments
+        )
+    }
+
+    public var wasCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return cancelled
+    }
+
+    public func run() throws {
+        let process = Process()
+        let standardOutput = Pipe()
+        let standardError = Pipe()
+        process.executableURL = executableURL
+        process.arguments = arguments
+        process.standardOutput = standardOutput
+        process.standardError = standardError
+
+        lock.lock()
+        if cancelled {
+            lock.unlock()
+            throw GHClientError.message("Sign-in cancelled.")
+        }
+        do {
+            try process.run()
+            self.process = process
+            lock.unlock()
+        } catch {
+            lock.unlock()
+            throw error
+        }
+
+        process.waitUntilExit()
+        let wasCancelled = self.wasCancelled
+        lock.lock()
+        self.process = nil
+        lock.unlock()
+
+        guard !wasCancelled else {
+            throw GHClientError.message("Sign-in cancelled.")
+        }
+        guard process.terminationStatus == 0 else {
+            throw GHClientError.message(
+                commandMessage(
+                    standardOutput.fileHandleForReading.readString(),
+                    standardError.fileHandleForReading.readString()
+                )
+            )
+        }
+    }
+
+    public func cancel() {
+        lock.lock()
+        cancelled = true
+        let process = process
+        lock.unlock()
+        process?.terminate()
+    }
+}
+
 private enum GHClientError: LocalizedError {
     case message(String)
 
@@ -95,6 +178,14 @@ private extension CommandOutput {
         let output = standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
         return output.isEmpty ? "GitHub CLI command failed." : output
     }
+}
+
+private func commandMessage(_ standardOutput: String, _ standardError: String) -> String {
+    let error = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !error.isEmpty { return error }
+
+    let output = standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+    return output.isEmpty ? "GitHub CLI command failed." : output
 }
 
 private extension FileHandle {

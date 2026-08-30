@@ -312,6 +312,8 @@ final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
     var isAddingAccount = false
+    var isCancellingAccountAddition = false
+    private var authentication: GHAuthentication?
     var configuredAccounts: [GitHubAccount] { accounts.filter(\.isConfigured) }
     var needsAttention: Bool { configuredAccounts.isEmpty }
     var activeAccount: GitHubAccount? { configuredAccounts.first(where: \.isActive) }
@@ -339,22 +341,37 @@ final class MenuBarModel {
     func addAccount() {
         guard !isAddingAccount else { return }
 
+        let authentication = AccountService.makeAuthentication()
+        self.authentication = authentication
         isAddingAccount = true
+        isCancellingAccountAddition = false
         error = nil
         NSWorkspace.shared.open(AppLinks.deviceSignIn)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let result = Result { try AccountService.authenticateAccount() }
+            let result = Result { try authentication.run() }
             DispatchQueue.main.async {
                 guard let self else { return }
+                guard self.authentication === authentication else { return }
+                self.authentication = nil
                 self.isAddingAccount = false
+                self.isCancellingAccountAddition = false
                 switch result {
                 case .success:
                     self.reload()
                 case let .failure(error):
-                    self.error = error.localizedDescription
+                    if !authentication.wasCancelled {
+                        self.error = error.localizedDescription
+                    }
                 }
             }
         }
+    }
+
+    func cancelAccountAddition() {
+        guard isAddingAccount, !isCancellingAccountAddition else { return }
+
+        isCancellingAccountAddition = true
+        authentication?.cancel()
     }
 
     func link(_ account: GitHubAccount, alias: String) {
@@ -452,13 +469,19 @@ struct SettingsView: View {
                     if model.isAddingAccount {
                         HStack {
                             ProgressView().controlSize(.small)
-                            Text("Continue sign-in in your browser…")
+                            Text(model.isCancellingAccountAddition ? "Cancelling sign-in…" : "Continue sign-in in your browser…")
                         }
                     } else {
                         Text("Add Account…")
                     }
                 }
                 .disabled(model.isAddingAccount)
+                if model.isAddingAccount {
+                    Button("Cancel sign-in") {
+                        model.cancelAccountAddition()
+                    }
+                    .disabled(model.isCancellingAccountAddition)
+                }
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)

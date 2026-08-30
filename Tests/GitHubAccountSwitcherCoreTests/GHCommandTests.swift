@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import GitHubAccountSwitcherCore
 
@@ -105,6 +106,26 @@ struct GHCommandTests {
         #expect(throws: (any Error).self) {
             try gh.authenticateAccount()
         }
+    }
+
+    @Test("A pending GitHub authentication can be cancelled")
+    func authenticationCanBeCancelled() async throws {
+        let authentication = GHAuthentication(
+            executableURL: URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "sleep 30"]
+        )
+        let task = Task.detached {
+            Result { try authentication.run() }
+        }
+
+        try await Task.sleep(for: .milliseconds(100))
+        authentication.cancel()
+
+        let result = await task.value
+        #expect(throws: (any Error).self) {
+            try result.get()
+        }
+        #expect(authentication.wasCancelled)
     }
 
     private var statusJSON: String {
