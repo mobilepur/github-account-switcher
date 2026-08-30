@@ -10,6 +10,14 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record reverse Git identity smoke test
+
+- Summary: Add a disposable commit after switching back to the other configured
+  GitHub account, verifying its private noreply author identity and SSH push
+  authorization independently.
+- Verification: `git diff --check` and inspection of the resulting commit
+  author and committer identities.
+
 ## 2026-08-30 — Record post-switch Git identity smoke test
 
 - Summary: Add another disposable smoke-test entry to verify the Git author

@@ -10,5 +10,7 @@ This file exists only on the unmerged smoke-test pull request.
    currently selected before this test commit.
 4. A follow-up commit records the author identity used after another account
    switching attempt.
+5. A second post-implementation commit verifies switching the commit identity
+   back to the other configured account.
 
 Do not merge this pull request.
