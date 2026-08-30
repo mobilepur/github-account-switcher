@@ -4,6 +4,39 @@ import Testing
 
 @Suite("GitHub CLI wrapper commands")
 struct GHCommandTests {
+    @Test("GitHub profile provides a private commit identity")
+    func githubProfileProvidesCommitIdentity() throws {
+        let gh = GHClient { arguments in
+            #expect(arguments == ["api", "--hostname", "github.com", "user"])
+            return CommandOutput(
+                exitCode: 0,
+                standardOutput: #"{"id":123456,"login":"mobilepur","name":"Mobile Pur"}"#,
+                standardError: ""
+            )
+        }
+
+        #expect(
+            try gh.gitIdentity()
+                == GitIdentity(
+                    name: "Mobile Pur",
+                    email: "123456+mobilepur@users.noreply.github.com"
+                )
+        )
+    }
+
+    @Test("GitHub login is used when the profile has no name")
+    func githubLoginProvidesFallbackCommitName() throws {
+        let gh = GHClient { _ in
+            CommandOutput(
+                exitCode: 0,
+                standardOutput: #"{"id":123456,"login":"mobilepur","name":null}"#,
+                standardError: ""
+            )
+        }
+
+        #expect(try gh.gitIdentity().name == "mobilepur")
+    }
+
     @Test("Accounts are sorted lexicographically by login")
     func accountsAreSortedLexicographically() {
         let accounts = [

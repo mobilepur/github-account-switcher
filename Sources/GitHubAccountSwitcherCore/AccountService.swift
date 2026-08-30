@@ -58,16 +58,77 @@ public enum AccountService {
     }
 
     public static func switchAccount(to login: String) throws {
-        try switchAccount(to: login, ghClient: .live, sshManager: .live)
+        try switchAccount(to: login, ghClient: .live, sshManager: .live, gitConfig: .live)
     }
 
-    static func switchAccount(to login: String, ghClient: GHClient, sshManager: SSHManager) throws {
+    static func switchAccount(
+        to login: String,
+        ghClient: GHClient,
+        sshManager: SSHManager,
+        gitConfig: GitConfigClient
+    ) throws {
+        guard let previousLogin = try ghClient.accounts().first(where: \.active)?.login else {
+            throw AccountSwitchError.noActiveGitHubAccount
+        }
+        let previousGitIdentity = try gitConfig.globalIdentity()
         let previous = try sshManager.activate(login: login)
+        var didSwitchGitHub = false
+        var didStartGitIdentityUpdate = false
         do {
             try ghClient.switchAccount(to: login)
+            didSwitchGitHub = true
+            let identity = try ghClient.gitIdentity()
+            didStartGitIdentityUpdate = true
+            try gitConfig.setGlobalIdentity(identity)
         } catch {
-            try sshManager.restoreManagedConfig(previous)
+            var rollbackErrors: [String] = []
+
+            if didStartGitIdentityUpdate {
+                recordRollbackError(in: &rollbackErrors) {
+                    try gitConfig.restoreGlobalIdentity(previousGitIdentity)
+                }
+            }
+            if didSwitchGitHub, previousLogin != login {
+                recordRollbackError(in: &rollbackErrors) {
+                    try ghClient.switchAccount(to: previousLogin)
+                }
+            }
+            recordRollbackError(in: &rollbackErrors) {
+                try sshManager.restoreManagedConfig(previous)
+            }
+
+            guard rollbackErrors.isEmpty else {
+                throw AccountSwitchError.rollbackFailed(
+                    original: error.localizedDescription,
+                    rollback: rollbackErrors
+                )
+            }
             throw error
+        }
+    }
+
+    private static func recordRollbackError(
+        in errors: inout [String],
+        operation: () throws -> Void
+    ) {
+        do {
+            try operation()
+        } catch {
+            errors.append(error.localizedDescription)
+        }
+    }
+}
+
+private enum AccountSwitchError: LocalizedError {
+    case noActiveGitHubAccount
+    case rollbackFailed(original: String, rollback: [String])
+
+    var errorDescription: String? {
+        switch self {
+        case .noActiveGitHubAccount:
+            "No active GitHub account to restore if switching fails."
+        case let .rollbackFailed(original, rollback):
+            "\(original) Rollback also failed: \(rollback.joined(separator: "; "))"
         }
     }
 }

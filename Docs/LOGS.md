@@ -10,6 +10,14 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Switch Git commit identity with GitHub accounts
+
+- Summary: Update the global Git author and committer identity alongside the
+  selected GitHub CLI account and SSH key, using GitHub's private noreply
+  address and rolling all managed state back after failures.
+- Verification: Passed 50 Swift tests, the universal release packaging test,
+  an independent read-only change review, and `git diff --check`.
+
 ## 2026-08-30 — Record mobilepur push smoke-test commit
 
 - Summary: Add a disposable local commit after activating mobilepur in GitHub
