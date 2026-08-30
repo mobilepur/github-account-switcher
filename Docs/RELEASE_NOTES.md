@@ -7,7 +7,8 @@
 - Account Settings can now add an existing GitHub account through GitHub's
   device sign-in page, with its one-time code copied to the clipboard and
   shown in the sign-in widget; the user opens GitHub explicitly from that
-  widget before linking an existing private SSH key.
+  widget without hiding the sign-in instructions, before linking an existing
+  private SSH key.
 
 ### Fixed
 

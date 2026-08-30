@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Keep GitHub account setup in Settings
+
+- Summary: Keep the device sign-in instructions visible, return successful
+  authentication to Settings for SSH-key linking, and simplify the Settings
+  footer to Add Account and Done.
+- Verification: Observed focused layout and Settings-window tests fail before
+  their changes; then passed 42 Swift tests, the universal release packaging
+  test, and `git diff --check`.
+
 ## 2026-08-30 — Refine the GitHub device sign-in widget
 
 - Summary: Show the device code in a centered Settings widget, let users copy

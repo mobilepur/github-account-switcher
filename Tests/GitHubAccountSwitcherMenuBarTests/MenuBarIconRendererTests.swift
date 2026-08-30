@@ -4,6 +4,29 @@ import Testing
 
 @Suite("Menu bar icon")
 struct MenuBarIconRendererTests {
+    @Test("Account sign-in returns to the Settings window")
+    @MainActor
+    func accountSignInFindsSettingsWindow() {
+        let otherWindow = NSWindow()
+        otherWindow.title = "Other window"
+        let settingsWindow = NSWindow()
+        settingsWindow.title = "gh-switcher-menubar Settings"
+
+        #expect(SettingsWindow.find(in: [otherWindow, settingsWindow]) === settingsWindow)
+    }
+
+    @Test("Account sign-in reserves room for its widget")
+    func accountSignInUsesTallerSettingsWindow() {
+        #expect(SettingsLayout.contentHeight(isAddingAccount: false) == 368)
+        #expect(SettingsLayout.contentHeight(isAddingAccount: true) == 480)
+    }
+
+    @Test("Opening the device page keeps the sign-in widget visible")
+    @MainActor
+    func devicePageOpenConfigurationDoesNotActivateBrowser() {
+        #expect(!GitHubDeviceBrowser.openConfiguration().activates)
+    }
+
     @Test("GitHub device sign-in timeouts use a concise retry message")
     func deviceSignInTimeoutHasFriendlyMessage() {
         let error = NSError(

@@ -25,6 +25,40 @@ enum GitHubSignInFeedback {
     }
 }
 
+enum GitHubDeviceBrowser {
+    @MainActor
+    static func open() {
+        NSWorkspace.shared.open(AppLinks.deviceSignIn, configuration: openConfiguration())
+    }
+
+    @MainActor
+    static func openConfiguration() -> NSWorkspace.OpenConfiguration {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        return configuration
+    }
+}
+
+enum SettingsLayout {
+    static func contentHeight(isAddingAccount: Bool) -> CGFloat {
+        isAddingAccount ? 480 : 368
+    }
+}
+
+enum SettingsWindow {
+    @MainActor
+    static func find(in windows: [NSWindow]) -> NSWindow? {
+        windows.first { $0.title.localizedCaseInsensitiveContains("settings") }
+    }
+
+    @MainActor
+    static func bringToFront() {
+        guard let window = find(in: NSApplication.shared.windows) else { return }
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+}
+
 @main
 struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -40,10 +74,11 @@ struct GitHubAccountSwitcherMenuBarApp: App {
                 openSettings()
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 DispatchQueue.main.async {
-                    guard let window = NSApplication.shared.windows.first(where: {
-                        $0.title.localizedCaseInsensitiveContains("settings")
-                    }) else { return }
-                    window.setContentSize(NSSize(width: 520, height: 368))
+                    guard let window = SettingsWindow.find(in: NSApplication.shared.windows) else { return }
+                    window.setContentSize(NSSize(
+                        width: 520,
+                        height: SettingsLayout.contentHeight(isAddingAccount: model.isAddingAccount)
+                    ))
                     window.center()
                     window.makeKeyAndOrderFront(nil)
                 }
@@ -388,6 +423,7 @@ final class MenuBarModel {
                 switch result {
                 case .success:
                     self.reload()
+                    SettingsWindow.bringToFront()
                 case let .failure(error):
                     if !authentication.wasCancelled {
                         self.signInError = GitHubSignInFeedback.message(for: error)
@@ -526,8 +562,12 @@ struct SettingsView: View {
                                 Text("Cancelling sign-in…")
                             }
                         } else {
+                            Text("This signs GitHub CLI in on this Mac; your password and token stay with GitHub and gh.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
                             Button("Sign in to GitHub") {
-                                NSWorkspace.shared.open(AppLinks.deviceSignIn)
+                                GitHubDeviceBrowser.open()
                             }
                             .font(.headline)
                             Text("Then enter this code:")
@@ -563,25 +603,23 @@ struct SettingsView: View {
                         }
                     }
                     .padding(14)
-                    .frame(minWidth: 280, minHeight: 164)
+                    .frame(minWidth: 280, minHeight: 202)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
                     Spacer()
                 }
                 Spacer(minLength: 0)
             }
-            HStack {
-                if !model.isAddingAccount {
+            if !model.isAddingAccount {
+                HStack {
                     Button {
                         model.addAccount()
                     } label: {
                         Text("Add Account…")
                     }
+                    Spacer()
+                    Button("Done") { dismiss() }
+                        .keyboardShortcut(.defaultAction)
                 }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
             }
             if let error = model.signInError ?? model.error {
                 Text(error)
@@ -590,7 +628,10 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 520, height: 368)
+        .frame(
+            width: 520,
+            height: SettingsLayout.contentHeight(isAddingAccount: model.isAddingAccount)
+        )
         .onAppear { model.reload() }
         .alert(
             "Remove \(accountToRemove?.login ?? "account")?",
