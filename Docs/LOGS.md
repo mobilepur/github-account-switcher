@@ -10,6 +10,12 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Create account-switching smoke test
+
+- Summary: Add an unmerged pull request with a disposable document for
+  verifying commits after switching GitHub accounts.
+- Verification: `git diff --check`.
+
 ## 2026-08-30 — Keep GitHub account setup in Settings
 
 - Summary: Keep the device sign-in instructions visible, return successful
