@@ -49,6 +49,14 @@ public enum AccountService {
         try SSHManager.live.unlink(login: login)
     }
 
+    public static func authenticateAccount() throws {
+        try GHClient.live.authenticateAccount()
+    }
+
+    public static func makeAuthentication() -> GHAuthentication {
+        GHAuthentication.live
+    }
+
     public static func switchAccount(to login: String) throws {
         try switchAccount(to: login, ghClient: .live, sshManager: .live)
     }

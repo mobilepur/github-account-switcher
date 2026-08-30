@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import GitHubAccountSwitcherCore
 
@@ -79,6 +80,57 @@ struct GHCommandTests {
         let result = CLI.run(arguments: ["current"], ghClient: gh)
 
         #expect(result == .init(exitCode: 0, output: "No active GitHub account."))
+    }
+
+    @Test("Account authentication opens the GitHub CLI browser flow without changing SSH keys")
+    func authenticateAccountUsesBrowserFlow() throws {
+        var receivedArguments: [String] = []
+        let gh = GHClient { arguments in
+            receivedArguments = arguments
+            return CommandOutput(exitCode: 0, standardOutput: "", standardError: "")
+        }
+
+        try gh.authenticateAccount()
+
+        #expect(receivedArguments == [
+            "auth", "login", "--hostname", "github.com", "--web", "--clipboard", "--skip-ssh-key",
+        ])
+    }
+
+    @Test("Device sign-in waits for the app to open the browser")
+    func authenticateAccountDoesNotOpenBrowserAutomatically() {
+        #expect(GHAuthentication.live.environment["GH_BROWSER"] == "/usr/bin/true")
+    }
+
+    @Test("Account authentication surfaces GitHub CLI errors")
+    func authenticateAccountSurfacesFailure() {
+        let gh = GHClient { _ in
+            CommandOutput(exitCode: 1, standardOutput: "", standardError: "sign-in cancelled")
+        }
+
+        #expect(throws: (any Error).self) {
+            try gh.authenticateAccount()
+        }
+    }
+
+    @Test("A pending GitHub authentication can be cancelled")
+    func authenticationCanBeCancelled() async throws {
+        let authentication = GHAuthentication(
+            executableURL: URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "sleep 30"]
+        )
+        let task = Task.detached {
+            Result { try authentication.run() }
+        }
+
+        try await Task.sleep(for: .milliseconds(100))
+        authentication.cancel()
+
+        let result = await task.value
+        #expect(throws: (any Error).self) {
+            try result.get()
+        }
+        #expect(authentication.wasCancelled)
     }
 
     private var statusJSON: String {

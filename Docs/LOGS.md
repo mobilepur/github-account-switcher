@@ -10,6 +10,48 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Keep GitHub account setup in Settings
+
+- Summary: Keep the device sign-in instructions visible, return successful
+  authentication to Settings for SSH-key linking, and simplify the Settings
+  footer to Add Account and Done.
+- Verification: Observed focused layout and Settings-window tests fail before
+  their changes; then passed 42 Swift tests, the universal release packaging
+  test, and `git diff --check`.
+
+## 2026-08-30 — Refine the GitHub device sign-in widget
+
+- Summary: Show the device code in a centered Settings widget, let users copy
+  it or explicitly open GitHub, support cancellation, and keep raw GitHub CLI
+  messages out of the menu bar.
+- Verification: Observed focused device-code, timeout-feedback, and
+  browser-launch tests fail before their changes; then passed 39 Swift tests,
+  the universal release packaging test, and `git diff --check`.
+
+## 2026-08-30 — Allow cancelling pending GitHub account sign-in
+
+- Summary: Add a dedicated Cancel sign-in control that terminates only the
+  pending GitHub CLI authentication process and keeps the Settings window open.
+- Verification: Observed the cancellable-authentication test fail before the
+  implementation, then passed 36 Swift tests, the universal release packaging
+  test, and `git diff --check`.
+
+## 2026-08-30 — Make GitHub account sign-in recoverable
+
+- Summary: Open GitHub's device sign-in page from Account Settings, copy the
+  one-time code to the clipboard, and use the compact progress indicator while
+  authentication is pending.
+- Verification: Observed the device-sign-in link test fail before the change,
+  then passed focused authentication tests and 35 Swift tests.
+
+## 2026-08-30 — Add GitHub account authentication from Settings
+
+- Summary: Add a bottom-left Add Account button that launches the GitHub CLI
+  browser sign-in flow without uploading SSH keys, then reloads Accounts with
+  progress and error feedback.
+- Verification: Focused browser-login command test, 34 Swift tests, universal
+  release packaging test, and `git diff --check` passed.
+
 ## 2026-08-30 — Polish menu bar icon geometry
 
 - Summary: Refine the adaptive menu bar icon with a 15-point badge, a

@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- Account Settings can now add an existing GitHub account through GitHub's
+  device sign-in page, with its one-time code copied to the clipboard and
+  shown in the sign-in widget; the user opens GitHub explicitly from that
+  widget without hiding the sign-in instructions, before linking an existing
+  private SSH key.
+
+### Fixed
+
+- A pending GitHub device sign-in can now be cancelled directly from Account
+  Settings without closing the window or changing existing accounts.
+- GitHub sign-in timeouts now show a concise retry message in Account Settings
+  instead of GitHub CLI output in the menu bar.
+
 ### Changed
 
 - The menu bar icon is now slightly more compact, keeps the active GitHub

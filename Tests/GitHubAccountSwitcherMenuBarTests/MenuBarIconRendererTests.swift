@@ -4,6 +4,50 @@ import Testing
 
 @Suite("Menu bar icon")
 struct MenuBarIconRendererTests {
+    @Test("Account sign-in returns to the Settings window")
+    @MainActor
+    func accountSignInFindsSettingsWindow() {
+        let otherWindow = NSWindow()
+        otherWindow.title = "Other window"
+        let settingsWindow = NSWindow()
+        settingsWindow.title = "gh-switcher-menubar Settings"
+
+        #expect(SettingsWindow.find(in: [otherWindow, settingsWindow]) === settingsWindow)
+    }
+
+    @Test("Account sign-in reserves room for its widget")
+    func accountSignInUsesTallerSettingsWindow() {
+        #expect(SettingsLayout.contentHeight(isAddingAccount: false) == 368)
+        #expect(SettingsLayout.contentHeight(isAddingAccount: true) == 480)
+    }
+
+    @Test("Opening the device page keeps the sign-in widget visible")
+    @MainActor
+    func devicePageOpenConfigurationDoesNotActivateBrowser() {
+        #expect(!GitHubDeviceBrowser.openConfiguration().activates)
+    }
+
+    @Test("GitHub device sign-in timeouts use a concise retry message")
+    func deviceSignInTimeoutHasFriendlyMessage() {
+        let error = NSError(
+            domain: "GitHub CLI",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "One-time code copied to clipboard\nfailed to authenticate via web browser: context deadline exceeded"]
+        )
+
+        #expect(
+            GitHubSignInFeedback.message(for: error)
+                == "GitHub sign-in timed out. Click Add Account… to try again."
+        )
+    }
+
+    @Test("GitHub device sign-in accepts only one-time codes")
+    func parsesGitHubDeviceCode() {
+        #expect(DeviceSignInCode.parse("AB12-CD34") == "AB12-CD34")
+        #expect(DeviceSignInCode.parse("AB12CD34") == nil)
+        #expect(DeviceSignInCode.parse("AB12-CD34\n") == nil)
+    }
+
     @Test("Clears stale avatars while another account is loading")
     @MainActor
     func clearsStaleAvatarWhileLoading() {
