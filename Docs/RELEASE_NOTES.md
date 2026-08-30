@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Account Settings can now add an existing GitHub account through the GitHub
+  CLI browser sign-in flow before linking its existing private SSH key.
+
 ### Changed
 
 - The menu bar icon is now slightly more compact, keeps the active GitHub

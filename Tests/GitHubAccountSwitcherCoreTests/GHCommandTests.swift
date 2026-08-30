@@ -81,6 +81,32 @@ struct GHCommandTests {
         #expect(result == .init(exitCode: 0, output: "No active GitHub account."))
     }
 
+    @Test("Account authentication opens the GitHub CLI browser flow without changing SSH keys")
+    func authenticateAccountUsesBrowserFlow() throws {
+        var receivedArguments: [String] = []
+        let gh = GHClient { arguments in
+            receivedArguments = arguments
+            return CommandOutput(exitCode: 0, standardOutput: "", standardError: "")
+        }
+
+        try gh.authenticateAccount()
+
+        #expect(receivedArguments == [
+            "auth", "login", "--hostname", "github.com", "--web", "--skip-ssh-key",
+        ])
+    }
+
+    @Test("Account authentication surfaces GitHub CLI errors")
+    func authenticateAccountSurfacesFailure() {
+        let gh = GHClient { _ in
+            CommandOutput(exitCode: 1, standardOutput: "", standardError: "sign-in cancelled")
+        }
+
+        #expect(throws: (any Error).self) {
+            try gh.authenticateAccount()
+        }
+    }
+
     private var statusJSON: String {
         #"{"hosts":{"github.com":[{"state":"success","active":true,"host":"github.com","login":"mobilepur","tokenSource":"keyring","scopes":"repo","gitProtocol":"https"},{"state":"success","active":false,"host":"github.com","login":"nayooti","tokenSource":"keyring","scopes":"repo","gitProtocol":"https"}]}}"#
     }

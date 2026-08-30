@@ -311,6 +311,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
+    var isAddingAccount = false
     var configuredAccounts: [GitHubAccount] { accounts.filter(\.isConfigured) }
     var needsAttention: Bool { configuredAccounts.isEmpty }
     var activeAccount: GitHubAccount? { configuredAccounts.first(where: \.isActive) }
@@ -332,6 +333,26 @@ final class MenuBarModel {
             reload()
         } catch {
             self.error = error.localizedDescription
+        }
+    }
+
+    func addAccount() {
+        guard !isAddingAccount else { return }
+
+        isAddingAccount = true
+        error = nil
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let result = Result { try AccountService.authenticateAccount() }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isAddingAccount = false
+                switch result {
+                case .success:
+                    self.reload()
+                case let .failure(error):
+                    self.error = error.localizedDescription
+                }
+            }
         }
     }
 
@@ -389,7 +410,7 @@ struct SettingsView: View {
             Text("GitHub Accounts")
                 .font(.title2)
             if model.accounts.isEmpty {
-                Text("No accounts found in gh. Add one with gh auth login, then reopen Account Settings.")
+                Text("No accounts found in gh. Use Add Account… to sign in to GitHub.")
                     .foregroundStyle(.secondary)
             } else {
                 ScrollView {
@@ -424,6 +445,19 @@ struct SettingsView: View {
                 }
             }
             HStack {
+                Button {
+                    model.addAccount()
+                } label: {
+                    if model.isAddingAccount {
+                        HStack {
+                            ProgressView()
+                            Text("Waiting for GitHub sign-in…")
+                        }
+                    } else {
+                        Text("Add Account…")
+                    }
+                }
+                .disabled(model.isAddingAccount)
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)

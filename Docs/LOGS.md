@@ -10,6 +10,14 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Add GitHub account authentication from Settings
+
+- Summary: Add a bottom-left Add Account button that launches the GitHub CLI
+  browser sign-in flow without uploading SSH keys, then reloads Accounts with
+  progress and error feedback.
+- Verification: Focused browser-login command test, 34 Swift tests, universal
+  release packaging test, and `git diff --check` passed.
+
 ## 2026-08-30 — Polish menu bar icon geometry
 
 - Summary: Refine the adaptive menu bar icon with a 15-point badge, a

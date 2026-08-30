@@ -34,6 +34,15 @@ struct GHClient {
         }
     }
 
+    func authenticateAccount() throws {
+        let output = run([
+            "auth", "login", "--hostname", "github.com", "--web", "--skip-ssh-key",
+        ])
+        guard output.exitCode == 0 else {
+            throw GHClientError.message(output.message)
+        }
+    }
+
     static var live: GHClient { GHClient { arguments in
         let process = Process()
         let standardOutput = Pipe()
