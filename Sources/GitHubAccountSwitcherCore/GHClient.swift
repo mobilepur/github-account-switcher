@@ -80,26 +80,39 @@ struct GHClient {
 public final class GHAuthentication: @unchecked Sendable {
     private let executableURL: URL
     private let arguments: [String]
+    let environment: [String: String]
     private let lock = NSLock()
     private var process: Process?
     private var cancelled = false
 
-    init(executableURL: URL, arguments: [String]) {
+    init(
+        executableURL: URL,
+        arguments: [String],
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) {
         self.executableURL = executableURL
         self.arguments = arguments
+        self.environment = environment
     }
 
     public static var live: GHAuthentication {
         let arguments = [
             "auth", "login", "--hostname", "github.com", "--web", "--clipboard", "--skip-ssh-key",
         ]
+        var environment = ProcessInfo.processInfo.environment
+        environment["GH_BROWSER"] = "/usr/bin/true"
         let candidates = ["/opt/homebrew/bin/gh", "/usr/local/bin/gh"]
         if let executable = candidates.first(where: FileManager.default.fileExists(atPath:)) {
-            return GHAuthentication(executableURL: URL(fileURLWithPath: executable), arguments: arguments)
+            return GHAuthentication(
+                executableURL: URL(fileURLWithPath: executable),
+                arguments: arguments,
+                environment: environment
+            )
         }
         return GHAuthentication(
             executableURL: URL(fileURLWithPath: "/usr/bin/env"),
-            arguments: ["gh"] + arguments
+            arguments: ["gh"] + arguments,
+            environment: environment
         )
     }
 
@@ -115,6 +128,7 @@ public final class GHAuthentication: @unchecked Sendable {
         let standardError = Pipe()
         process.executableURL = executableURL
         process.arguments = arguments
+        process.environment = environment
         process.standardOutput = standardOutput
         process.standardError = standardError
 

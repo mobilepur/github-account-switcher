@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Refine the GitHub device sign-in widget
+
+- Summary: Show the device code in a centered Settings widget, let users copy
+  it or explicitly open GitHub, support cancellation, and keep raw GitHub CLI
+  messages out of the menu bar.
+- Verification: Observed focused device-code, timeout-feedback, and
+  browser-launch tests fail before their changes; then passed 39 Swift tests,
+  the universal release packaging test, and `git diff --check`.
+
 ## 2026-08-30 — Allow cancelling pending GitHub account sign-in
 
 - Summary: Add a dedicated Cancel sign-in control that terminates only the

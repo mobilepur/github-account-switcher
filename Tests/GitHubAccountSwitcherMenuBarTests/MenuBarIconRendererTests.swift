@@ -4,6 +4,27 @@ import Testing
 
 @Suite("Menu bar icon")
 struct MenuBarIconRendererTests {
+    @Test("GitHub device sign-in timeouts use a concise retry message")
+    func deviceSignInTimeoutHasFriendlyMessage() {
+        let error = NSError(
+            domain: "GitHub CLI",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "One-time code copied to clipboard\nfailed to authenticate via web browser: context deadline exceeded"]
+        )
+
+        #expect(
+            GitHubSignInFeedback.message(for: error)
+                == "GitHub sign-in timed out. Click Add Account… to try again."
+        )
+    }
+
+    @Test("GitHub device sign-in accepts only one-time codes")
+    func parsesGitHubDeviceCode() {
+        #expect(DeviceSignInCode.parse("AB12-CD34") == "AB12-CD34")
+        #expect(DeviceSignInCode.parse("AB12CD34") == nil)
+        #expect(DeviceSignInCode.parse("AB12-CD34\n") == nil)
+    }
+
     @Test("Clears stale avatars while another account is loading")
     @MainActor
     func clearsStaleAvatarWhileLoading() {

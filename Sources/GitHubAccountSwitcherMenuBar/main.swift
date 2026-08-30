@@ -3,6 +3,28 @@ import GitHubAccountSwitcherCore
 import Observation
 import SwiftUI
 
+enum DeviceSignInCode {
+    static func parse(_ value: String?) -> String? {
+        guard let value,
+              value.range(
+                  of: #"^[A-Z0-9]{4}-[A-Z0-9]{4}$"#,
+                  options: .regularExpression
+              ) != nil else {
+            return nil
+        }
+        return value
+    }
+}
+
+enum GitHubSignInFeedback {
+    static func message(for error: Error) -> String {
+        if error.localizedDescription.localizedCaseInsensitiveContains("context deadline exceeded") {
+            return "GitHub sign-in timed out. Click Add Account… to try again."
+        }
+        return "GitHub sign-in could not be completed. Click Add Account… to try again."
+    }
+}
+
 @main
 struct GitHubAccountSwitcherMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -311,9 +333,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 final class MenuBarModel {
     var accounts: [GitHubAccount] = []
     var error: String?
+    var signInError: String?
     var isAddingAccount = false
     var isCancellingAccountAddition = false
+    var deviceCode: String?
     private var authentication: GHAuthentication?
+    private var clipboardChangeCount: Int?
     var configuredAccounts: [GitHubAccount] { accounts.filter(\.isConfigured) }
     var needsAttention: Bool { configuredAccounts.isEmpty }
     var activeAccount: GitHubAccount? { configuredAccounts.first(where: \.isActive) }
@@ -345,8 +370,11 @@ final class MenuBarModel {
         self.authentication = authentication
         isAddingAccount = true
         isCancellingAccountAddition = false
+        deviceCode = nil
+        clipboardChangeCount = NSPasteboard.general.changeCount
         error = nil
-        NSWorkspace.shared.open(AppLinks.deviceSignIn)
+        signInError = nil
+        loadDeviceCode(for: authentication, attemptsRemaining: 20)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let result = Result { try authentication.run() }
             DispatchQueue.main.async {
@@ -355,15 +383,34 @@ final class MenuBarModel {
                 self.authentication = nil
                 self.isAddingAccount = false
                 self.isCancellingAccountAddition = false
+                self.deviceCode = nil
+                self.clipboardChangeCount = nil
                 switch result {
                 case .success:
                     self.reload()
                 case let .failure(error):
                     if !authentication.wasCancelled {
-                        self.error = error.localizedDescription
+                        self.signInError = GitHubSignInFeedback.message(for: error)
                     }
                 }
             }
+        }
+    }
+
+    private func loadDeviceCode(for authentication: GHAuthentication, attemptsRemaining: Int) {
+        guard self.authentication === authentication,
+              isAddingAccount,
+              !isCancellingAccountAddition else { return }
+
+        if clipboardChangeCount != NSPasteboard.general.changeCount,
+           let code = DeviceSignInCode.parse(NSPasteboard.general.string(forType: .string)) {
+            deviceCode = code
+            return
+        }
+        guard attemptsRemaining > 0 else { return }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            self?.loadDeviceCode(for: authentication, attemptsRemaining: attemptsRemaining - 1)
         }
     }
 
@@ -372,6 +419,13 @@ final class MenuBarModel {
 
         isCancellingAccountAddition = true
         authentication?.cancel()
+    }
+
+    func copyDeviceCode() {
+        guard let deviceCode else { return }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(deviceCode, forType: .string)
     }
 
     func link(_ account: GitHubAccount, alias: String) {
@@ -462,25 +516,66 @@ struct SettingsView: View {
                     }
                 }
             }
-            HStack {
-                Button {
-                    model.addAccount()
-                } label: {
-                    if model.isAddingAccount {
-                        HStack {
-                            ProgressView().controlSize(.small)
-                            Text(model.isCancellingAccountAddition ? "Cancelling sign-in…" : "Continue sign-in in your browser…")
+            if model.isAddingAccount {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        if model.isCancellingAccountAddition {
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.small)
+                                Text("Cancelling sign-in…")
+                            }
+                        } else {
+                            Button("Sign in to GitHub") {
+                                NSWorkspace.shared.open(AppLinks.deviceSignIn)
+                            }
+                            .font(.headline)
+                            Text("Then enter this code:")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            if let code = model.deviceCode {
+                                Button {
+                                    model.copyDeviceCode()
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Text(code)
+                                            .font(.system(.title2, design: .monospaced, weight: .semibold))
+                                        Image(systemName: "doc.on.doc")
+                                    }
+                                }
+                                .help("Copy sign-in code")
+                                .accessibilityLabel("Copy sign-in code \(code)")
+                            } else {
+                                HStack(spacing: 8) {
+                                    ProgressView().controlSize(.small)
+                                    Text("Preparing code…")
+                                        .font(.caption)
+                                }
+                            }
                         }
-                    } else {
+                        Spacer(minLength: 0)
+                        HStack {
+                            Spacer()
+                            Button("Cancel") {
+                                model.cancelAccountAddition()
+                            }
+                            .disabled(model.isCancellingAccountAddition)
+                        }
+                    }
+                    .padding(14)
+                    .frame(minWidth: 280, minHeight: 164)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                    Spacer()
+                }
+                Spacer(minLength: 0)
+            }
+            HStack {
+                if !model.isAddingAccount {
+                    Button {
+                        model.addAccount()
+                    } label: {
                         Text("Add Account…")
                     }
-                }
-                .disabled(model.isAddingAccount)
-                if model.isAddingAccount {
-                    Button("Cancel sign-in") {
-                        model.cancelAccountAddition()
-                    }
-                    .disabled(model.isCancellingAccountAddition)
                 }
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
@@ -488,7 +583,7 @@ struct SettingsView: View {
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }
-            if let error = model.error {
+            if let error = model.signInError ?? model.error {
                 Text(error)
                     .font(.caption)
                     .foregroundStyle(.red)

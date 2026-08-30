@@ -97,6 +97,11 @@ struct GHCommandTests {
         ])
     }
 
+    @Test("Device sign-in waits for the app to open the browser")
+    func authenticateAccountDoesNotOpenBrowserAutomatically() {
+        #expect(GHAuthentication.live.environment["GH_BROWSER"] == "/usr/bin/true")
+    }
+
     @Test("Account authentication surfaces GitHub CLI errors")
     func authenticateAccountSurfacesFailure() {
         let gh = GHClient { _ in
