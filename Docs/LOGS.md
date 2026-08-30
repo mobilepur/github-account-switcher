@@ -10,6 +10,13 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record post-switch Git identity smoke test
+
+- Summary: Add another disposable smoke-test entry to verify the Git author
+  identity and SSH push account after switching accounts in the app.
+- Verification: `git diff --check` and inspection of the resulting commit
+  author and committer identities.
+
 ## 2026-08-30 — Switch Git commit identity with GitHub accounts
 
 - Summary: Update the global Git author and committer identity alongside the
