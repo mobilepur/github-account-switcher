@@ -10,6 +10,54 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-30 — Record mobilepur Git identity smoke test
+
+- Summary: Add another disposable commit after switching back to mobilepur,
+  verifying its private noreply author identity and SSH push authorization.
+- Verification: `git diff --check`, inspection of the resulting author and
+  committer identities, and a direct GitHub SSH authentication check.
+
+## 2026-08-30 — Record reverse Git identity smoke test
+
+- Summary: Add a disposable commit after switching back to the other configured
+  GitHub account, verifying its private noreply author identity and SSH push
+  authorization independently.
+- Verification: `git diff --check` and inspection of the resulting commit
+  author and committer identities.
+
+## 2026-08-30 — Record post-switch Git identity smoke test
+
+- Summary: Add another disposable smoke-test entry to verify the Git author
+  identity and SSH push account after switching accounts in the app.
+- Verification: `git diff --check` and inspection of the resulting commit
+  author and committer identities.
+
+## 2026-08-30 — Switch Git commit identity with GitHub accounts
+
+- Summary: Update the global Git author and committer identity alongside the
+  selected GitHub CLI account and SSH key, using GitHub's private noreply
+  address and rolling all managed state back after failures.
+- Verification: Passed 50 Swift tests, the universal release packaging test,
+  an independent read-only change review, and `git diff --check`.
+
+## 2026-08-30 — Record mobilepur push smoke-test commit
+
+- Summary: Add a disposable local commit after activating mobilepur in GitHub
+  Account Switcher, ready for a separate push test.
+- Verification: `git diff --check`.
+
+## 2026-08-30 — Record account-switching smoke-test commit
+
+- Summary: Add a second disposable commit to the unmerged smoke-test pull
+  request after switching the active GitHub CLI account.
+- Verification: `git diff --check`.
+
+## 2026-08-30 — Create account-switching smoke test
+
+- Summary: Add an unmerged pull request with a disposable document for
+  verifying commits after switching GitHub accounts.
+- Verification: `git diff --check`.
+
 ## 2026-08-30 — Keep GitHub account setup in Settings
 
 - Summary: Keep the device sign-in instructions visible, return successful

@@ -10,14 +10,23 @@ public enum CLI {
     }
 
     public static func run(arguments: [String]) -> Result {
-        run(arguments: arguments, ghClient: .live, sshManager: .live)
+        run(arguments: arguments, ghClient: .live, sshManager: .live, gitConfig: .live)
     }
 
     static func run(arguments: [String], ghClient: GHClient) -> Result {
-        run(arguments: arguments, ghClient: ghClient, sshManager: .live)
+        run(arguments: arguments, ghClient: ghClient, sshManager: .live, gitConfig: .live)
     }
 
     static func run(arguments: [String], ghClient: GHClient, sshManager: SSHManager) -> Result {
+        run(arguments: arguments, ghClient: ghClient, sshManager: sshManager, gitConfig: .live)
+    }
+
+    static func run(
+        arguments: [String],
+        ghClient: GHClient,
+        sshManager: SSHManager,
+        gitConfig: GitConfigClient
+    ) -> Result {
         if arguments == ["version"] {
             return Result(exitCode: 0, output: "gh-switcher 0.1.9")
         }
@@ -28,7 +37,12 @@ public enum CLI {
             return current(using: ghClient)
         }
         if arguments.count == 2, arguments[0] == "use" {
-            return use(login: arguments[1], ghClient: ghClient, sshManager: sshManager)
+            return use(
+                login: arguments[1],
+                ghClient: ghClient,
+                sshManager: sshManager,
+                gitConfig: gitConfig
+            )
         }
         if arguments == ["ssh", "mappings"] {
             return sshMappings(using: sshManager)
@@ -120,9 +134,19 @@ public enum CLI {
         }
     }
 
-    private static func use(login: String, ghClient: GHClient, sshManager: SSHManager) -> Result {
+    private static func use(
+        login: String,
+        ghClient: GHClient,
+        sshManager: SSHManager,
+        gitConfig: GitConfigClient
+    ) -> Result {
         do {
-            try AccountService.switchAccount(to: login, ghClient: ghClient, sshManager: sshManager)
+            try AccountService.switchAccount(
+                to: login,
+                ghClient: ghClient,
+                sshManager: sshManager,
+                gitConfig: gitConfig
+            )
             return Result(exitCode: 0, output: "Active GitHub account: \(login)")
         } catch {
             return failure(error)
