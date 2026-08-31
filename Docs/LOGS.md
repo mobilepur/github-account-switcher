@@ -10,6 +10,16 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-31 — Stabilize release tests and prepare 1.0.2
+
+- Summary: Remove an unnecessary reentrant main-run-loop wait from the native
+  navigation hit-area test after the macOS 15 release runner crashed, preserve
+  the real full-row mouse-event assertion, and prepare version 1.0.2.
+- Verification: Captured signal 11 in v1.0.1 release run 33379233688, proved
+  the button action completes synchronously, then passed the focused test 20
+  times, the complete 52-test suite 20 times, and the universal release
+  packaging test.
+
 ## 2026-08-31 — Release 1.0.1 with clearer account navigation
 
 - Summary: Explain the required SSH-key mapping through concise Account

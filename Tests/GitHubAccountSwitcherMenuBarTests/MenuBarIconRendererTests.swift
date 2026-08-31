@@ -278,6 +278,5 @@ struct MenuBarIconRendererTests {
             )!
             window.sendEvent(event)
         }
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
     }
 }

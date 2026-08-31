@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 1.0.1 — 2026-08-31
+## 1.0.2 — 2026-08-31
 
 ### Changed
 
@@ -10,6 +10,11 @@
   authenticates Git pushes as the selected GitHub account.
 - Navigating from the menu bar panel now works across the full width of each
   navigation row, including its empty space and chevron.
+
+## 1.0.1 — 2026-08-31
+
+This version was not published because its release workflow stopped during
+tests, before creating artifacts or updating Homebrew.
 
 ## 1.0.0 — 2026-08-30
 
