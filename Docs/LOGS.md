@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-31 — Serialize AppKit tests and prepare 1.0.3
+
+- Summary: Serialize the menu bar AppKit test suite after two macOS 15 release
+  runs crashed while its native window test overlapped other tests, add
+  macOS 15 pull-request verification, and prepare version 1.0.3.
+- Verification: Captured signal 11 in v1.0.1 and v1.0.2 release runs, observed
+  all 13 menu bar tests execute serially, then passed all 52 Swift tests and
+  the universal release packaging test.
+
 ## 2026-08-31 — Stabilize release tests and prepare 1.0.2
 
 - Summary: Remove an unnecessary reentrant main-run-loop wait from the native

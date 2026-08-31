@@ -3,7 +3,7 @@ import SwiftUI
 import Testing
 @testable import GitHubAccountSwitcherMenuBar
 
-@Suite("Menu bar icon")
+@Suite("Menu bar icon", .serialized)
 struct MenuBarIconRendererTests {
     @Test("Navigation rows activate from their empty space")
     @MainActor
