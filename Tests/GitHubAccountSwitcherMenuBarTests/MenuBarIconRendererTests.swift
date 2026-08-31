@@ -1,9 +1,46 @@
 import AppKit
+import SwiftUI
 import Testing
 @testable import GitHubAccountSwitcherMenuBar
 
 @Suite("Menu bar icon")
 struct MenuBarIconRendererTests {
+    @Test("Navigation rows activate from their empty space")
+    @MainActor
+    func navigationRowsUseFullWidthHitTarget() {
+        var activationCount = 0
+        let row = Button {
+            activationCount += 1
+        } label: {
+            MainPanelNavigationLabel(title: "Open")
+        }
+        .buttonStyle(.plain)
+        .frame(width: 212, height: 32)
+        let hostingView = NSHostingView(rootView: row)
+        let window = NSWindow(
+            contentRect: NSRect(x: 100, y: 100, width: 212, height: 32),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = hostingView
+        window.orderFront(nil)
+        defer { window.close() }
+        hostingView.layoutSubtreeIfNeeded()
+
+        click(at: NSPoint(x: 106, y: 16), in: window)
+
+        #expect(activationCount == 1)
+    }
+
+    @Test("Account Settings offer concise private-key help")
+    func privateKeyHelpExplainsPushAuthentication() {
+        #expect(
+            SettingsCopy.privateKeyGuidance
+                == "The linked SSH key authenticates Git pushes as this GitHub account."
+        )
+    }
+
     @Test("Account sign-in returns to the Settings window")
     @MainActor
     func accountSignInFindsSettingsWindow() {
@@ -223,5 +260,24 @@ struct MenuBarIconRendererTests {
     private func isNotOpaque(_ color: NSColor?) -> Bool {
         guard let color else { return false }
         return color.alphaComponent < 0.8
+    }
+
+    @MainActor
+    private func click(at point: NSPoint, in window: NSWindow) {
+        for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+            let event = NSEvent.mouseEvent(
+                with: type,
+                location: point,
+                modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber,
+                context: nil,
+                eventNumber: 0,
+                clickCount: 1,
+                pressure: type == .leftMouseDown ? 1 : 0
+            )!
+            window.sendEvent(event)
+        }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
     }
 }

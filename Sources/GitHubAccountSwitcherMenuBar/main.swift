@@ -233,6 +233,32 @@ enum MenuBarIconRenderer {
     }
 }
 
+struct MainPanelNavigationLabel: View {
+    let title: String
+    var detail: String?
+
+    init(title: String, detail: String? = nil) {
+        self.title = title
+        self.detail = detail
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(title)
+            Spacer()
+            if let detail {
+                Text(detail)
+                    .foregroundStyle(.secondary)
+            }
+            Image(systemName: "chevron.right")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+}
+
 struct MainPanelView: View {
     let model: MenuBarModel
     let showSettings: () -> Void
@@ -281,15 +307,9 @@ struct MainPanelView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button(action: showSettings) {
-                HStack {
-                    Text("Configure Accounts")
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                }
+                MainPanelNavigationLabel(title: "Configure Accounts")
             }
-                .buttonStyle(.plain)
+            .buttonStyle(.plain)
             Toggle("Start at Login", isOn: startAtLoginBinding)
                 .disabled(loginItemManager.status == .unavailable)
             Toggle("Use GitHub Avatars", isOn: $useGitHubAvatars)
@@ -302,23 +322,19 @@ struct MainPanelView: View {
             Text("About")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            HStack {
-                Text("GitHub Account Switcher")
-                Spacer()
-                Link(destination: AppLinks.releaseNotes(version: appVersion)) {
-                    HStack(spacing: 4) {
-                        Text(appVersion)
-                        Image(systemName: "chevron.right")
-                            .font(.caption.bold())
-                    }
-                    .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .help("View GitHub release notes for version \(appVersion)")
-                .accessibilityLabel("Version \(appVersion), GitHub Release Notes")
+            Link(destination: AppLinks.releaseNotes(version: appVersion)) {
+                MainPanelNavigationLabel(
+                    title: "GitHub Account Switcher",
+                    detail: appVersion
+                )
             }
-            Link("Report a Problem…", destination: AppLinks.newIssue)
-                .buttonStyle(.plain)
+            .buttonStyle(.plain)
+            .help("View GitHub release notes for version \(appVersion)")
+            .accessibilityLabel("Version \(appVersion), GitHub Release Notes")
+            Link(destination: AppLinks.newIssue) {
+                MainPanelNavigationLabel(title: "Report a Problem…")
+            }
+            .buttonStyle(.plain)
             Spacer(minLength: 8)
             Divider()
             Button("Quit") {
@@ -508,15 +524,37 @@ final class PrivateKeyPanelDelegate: NSObject, NSOpenSavePanelDelegate {
     }
 }
 
+enum SettingsCopy {
+    static let privateKeyGuidance = "The linked SSH key authenticates Git pushes as this GitHub account."
+}
+
 struct SettingsView: View {
     let model: MenuBarModel
     @Environment(\.dismiss) private var dismiss
     @State private var accountToRemove: GitHubAccount?
+    @State private var isShowingPrivateKeyHelp = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("GitHub Accounts")
-                .font(.title2)
+            HStack(spacing: 6) {
+                Text("GitHub Accounts")
+                    .font(.title2)
+                Button {
+                    isShowingPrivateKeyHelp = true
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("About SSH keys")
+                .accessibilityLabel("About SSH keys")
+                .popover(isPresented: $isShowingPrivateKeyHelp) {
+                    Text(SettingsCopy.privateKeyGuidance)
+                        .font(.callout)
+                        .padding(14)
+                        .frame(width: 260, alignment: .leading)
+                }
+            }
             if model.accounts.isEmpty {
                 Text("No accounts found in gh. Use Add Account… to sign in to GitHub.")
                     .foregroundStyle(.secondary)

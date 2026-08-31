@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.0.1 — 2026-08-31
+
+### Changed
+
+- Account Settings now offers concise help explaining that the linked SSH key
+  authenticates Git pushes as the selected GitHub account.
+- Navigating from the menu bar panel now works across the full width of each
+  navigation row, including its empty space and chevron.
+
 ## 1.0.0 — 2026-08-30
 
 ### Added

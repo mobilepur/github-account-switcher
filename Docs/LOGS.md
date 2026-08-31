@@ -10,6 +10,15 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-31 — Release 1.0.1 with clearer account navigation
+
+- Summary: Explain the required SSH-key mapping through concise Account
+  Settings help, make every menu bar navigation row clickable across its full
+  width, and prepare version 1.0.1.
+- Verification: Observed the focused guidance, full-row hit-area, and 1.0.1
+  version tests fail before implementation; then passed 52 Swift tests and the
+  universal release packaging test.
+
 ## 2026-08-30 — Release 1.0.0 with Git identity switching
 
 - Summary: Update the global Git author and committer identity alongside the

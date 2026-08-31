@@ -16,6 +16,6 @@ struct CLICommandTests {
         let result = CLI.run(arguments: ["version"])
 
         #expect(result.exitCode == 0)
-        #expect(result.output == "gh-switcher 1.0.0")
+        #expect(result.output == "gh-switcher 1.0.1")
     }
 }
