@@ -28,7 +28,7 @@ public enum CLI {
         gitConfig: GitConfigClient
     ) -> Result {
         if arguments == ["version"] {
-            return Result(exitCode: 0, output: "gh-switcher 1.0.0")
+            return Result(exitCode: 0, output: "gh-switcher 1.0.1")
         }
         if arguments == ["accounts"] {
             return accounts(using: ghClient)
