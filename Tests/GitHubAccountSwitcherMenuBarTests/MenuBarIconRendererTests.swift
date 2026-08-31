@@ -3,9 +3,14 @@ import SwiftUI
 import Testing
 @testable import GitHubAccountSwitcherMenuBar
 
-@Suite("Menu bar icon")
+@Suite("Menu bar icon", .serialized)
 struct MenuBarIconRendererTests {
-    @Test("Navigation rows activate from their empty space")
+    // Synthetic AppKit mouse events crash the headless macOS 15 runner after
+    // this test passes, so keep the native interaction check local.
+    @Test(
+        "Navigation rows activate from their empty space",
+        .enabled(if: ProcessInfo.processInfo.environment["CI"] != "true")
+    )
     @MainActor
     func navigationRowsUseFullWidthHitTarget() {
         var activationCount = 0

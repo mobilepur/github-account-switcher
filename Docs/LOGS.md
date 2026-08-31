@@ -10,6 +10,25 @@ using this format:
 - Verification: Tests and checks performed.
 ```
 
+## 2026-08-31 — Keep synthetic AppKit clicks local
+
+- Summary: Keep the native full-row mouse-event regression test active for
+  local development, but skip it in headless CI where the macOS 15 runner
+  crashes after the assertion passes; all non-window tests remain in CI.
+- Verification: Captured the post-test signal 11 in pull-request run
+  33381058112, then passed all 52 tests locally and the CI-configured suite
+  with the single native-window test reported as skipped, plus the universal
+  release packaging test.
+
+## 2026-08-31 — Serialize AppKit tests and prepare 1.0.3
+
+- Summary: Serialize the menu bar AppKit test suite while investigating two
+  macOS 15 crashes around its native window test, add
+  macOS 15 pull-request verification, and prepare version 1.0.3.
+- Verification: Captured signal 11 in v1.0.1 and v1.0.2 release runs, observed
+  all 13 menu bar tests execute serially, then passed all 52 Swift tests and
+  the universal release packaging test.
+
 ## 2026-08-31 — Stabilize release tests and prepare 1.0.2
 
 - Summary: Remove an unnecessary reentrant main-run-loop wait from the native

@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test
+        run: swift test
+      - name: Test release package
+        run: bash Tests/PackagingTests/ReleasePackageTests.sh
